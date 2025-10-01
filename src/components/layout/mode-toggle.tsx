@@ -3,15 +3,34 @@
 import { motion } from "framer-motion";
 import { MoonIcon, SunIcon } from "lucide-react";
 import { useTheme } from "next-themes";
-
+import { useEffect, useState } from "react";
 import { Button } from "../ui/button";
 
 export function ModeToggle() {
     const { theme, setTheme } = useTheme();
+    const [mounted, setMounted] = useState(false);
+
+    // Prevent hydration mismatch by only rendering after mount
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     const toggleTheme = () => {
         setTheme(theme === "dark" ? "light" : "dark");
     };
+
+    if (!mounted) {
+        return (
+            <Button
+                variant="outline"
+                size="icon"
+                className="relative size-10 overflow-hidden rounded-full"
+            >
+                <SunIcon className="h-[1.2rem] w-[1.2rem]" />
+                <span className="sr-only">Toggle theme</span>
+            </Button>
+        );
+    }
 
     return (
         <Button
