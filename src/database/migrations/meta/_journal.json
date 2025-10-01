@@ -8,6 +8,13 @@
       "when": 1759327006320,
       "tag": "0000_giant_hammerhead",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1759343646917,
+      "tag": "0001_nostalgic_daimon_hellstrom",
+      "breakpoints": true
     }
   ]
 }
