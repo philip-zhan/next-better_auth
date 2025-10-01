@@ -1,20 +1,20 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import Link from "next/link";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuSeparator,
-    DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu"
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
-    useSidebar
-} from "@/components/ui/sidebar"
+    useSidebar,
+} from "@/components/ui/sidebar";
 
 import {
     RiFindReplaceLine,
@@ -24,33 +24,33 @@ import {
     RiHomeLine,
     RiUserLine,
     RiLockLine,
-    RiBankCardLine
-} from "@remixicon/react"
+    RiBankCardLine,
+} from "@remixicon/react";
 
-import { authClient } from "@/lib/auth-client"
+import { authClient } from "@/lib/auth-client";
 
 // Better Auth UI Profile types
 interface Profile {
-    avatarUrl?: string | null
-    avatar?: string | null
-    image?: string | null
-    emailVerified?: boolean | null
-    isAnonymous?: boolean | null
-    fullName?: string | null
-    firstName?: string | null
-    displayName?: string | null
-    username?: string | null
-    displayUsername?: string | null
-    name?: string | null
-    email?: string | null
-    id?: string | number
+    avatarUrl?: string | null;
+    avatar?: string | null;
+    image?: string | null;
+    emailVerified?: boolean | null;
+    isAnonymous?: boolean | null;
+    fullName?: string | null;
+    firstName?: string | null;
+    displayName?: string | null;
+    username?: string | null;
+    displayUsername?: string | null;
+    name?: string | null;
+    email?: string | null;
+    id?: string | number;
 }
 
 export function NavUser() {
-    const { isMobile } = useSidebar()
+    const { isMobile } = useSidebar();
 
     // Use Better Auth session hook to get real user data
-    const { data: session, isPending } = authClient.useSession()
+    const { data: session, isPending } = authClient.useSession();
 
     // Handle sign out
     const handleSignOut = async () => {
@@ -59,13 +59,13 @@ export function NavUser() {
                 fetchOptions: {
                     onSuccess: () => {
                         // The session will automatically update due to the reactive nature of useSession
-                    }
-                }
-            })
+                    },
+                },
+            });
         } catch (error) {
-            console.error("Sign out error:", error)
+            console.error("Sign out error:", error);
         }
-    }
+    };
 
     // Show loading state or return null if no session
     if (isPending) {
@@ -84,14 +84,14 @@ export function NavUser() {
                     </SidebarMenuButton>
                 </SidebarMenuItem>
             </SidebarMenu>
-        )
+        );
     }
 
     if (!session?.user) {
-        return null
+        return null;
     }
 
-    const user = session.user as Profile
+    const user = session.user as Profile;
 
     // Get user's display name with fallbacks
     const displayName =
@@ -99,10 +99,10 @@ export function NavUser() {
         user.fullName ||
         user.name ||
         user.firstName ||
-        "User"
+        "User";
 
     // Get user's avatar with fallbacks
-    const avatarSrc = user.avatarUrl || user.avatar || user.image
+    const avatarSrc = user.avatarUrl || user.avatar || user.image;
 
     // Generate initials for fallback
     const initials =
@@ -111,7 +111,7 @@ export function NavUser() {
             .map((name) => name.charAt(0))
             .join("")
             .toUpperCase()
-            .slice(0, 2) || "U"
+            .slice(0, 2) || "U";
 
     return (
         <SidebarMenu>
@@ -226,5 +226,5 @@ export function NavUser() {
                 </DropdownMenu>
             </SidebarMenuItem>
         </SidebarMenu>
-    )
+    );
 }

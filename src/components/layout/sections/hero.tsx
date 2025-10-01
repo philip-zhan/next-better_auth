@@ -1,15 +1,15 @@
-"use client"
-import { ArrowRight, Lock } from "lucide-react"
-import { RiGithubFill } from "@remixicon/react"
-import Image from "next/image"
-import Link from "next/link"
-import { useTheme } from "next-themes"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { site } from "@/config/site"
+"use client";
+import { ArrowRight, Lock } from "lucide-react";
+import { RiGithubFill } from "@remixicon/react";
+import Image from "next/image";
+import Link from "next/link";
+import { useTheme } from "next-themes";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { site } from "@/config/site";
 
 export const HeroSection = () => {
-    const { theme } = useTheme()
+    const { theme } = useTheme();
     return (
         <section className="container mx-auto flex w-full justify-center px-4">
             <div className="grid place-items-center gap-8 py-20">
@@ -107,5 +107,5 @@ export const HeroSection = () => {
                 </div>
             </div>
         </section>
-    )
-}
+    );
+};

@@ -1,41 +1,41 @@
-"use client"
+"use client";
 
-import { useState, useId } from "react"
-import { CheckIcon } from "lucide-react"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Label } from "@/components/ui/label"
+import { useState, useId } from "react";
+import { CheckIcon } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import {
     Card,
     CardHeader,
     CardTitle,
     CardDescription,
     CardContent,
-    CardFooter
-} from "@/components/ui/card"
-import { plans } from "@/lib/payments/plans"
-import SubscriptionButton from "./subscription-button"
+    CardFooter,
+} from "@/components/ui/card";
+import { plans } from "@/lib/payments/plans";
+import SubscriptionButton from "./subscription-button";
 
 interface PlanSelectorProps {
-    activeSub: any
-    session: any
+    activeSub: any;
+    session: any;
 }
 
 export default function PlanSelector({
     activeSub,
-    session
+    session,
 }: PlanSelectorProps) {
     const [selectedPlan, setSelectedPlan] = useState(
         activeSub?.plan
             ? plans.find((p) => p.name === activeSub.plan)?.id.toString() ||
                   plans[0].id.toString()
             : plans[0].id.toString()
-    )
-    const id = useId()
+    );
+    const id = useId();
 
     const currentPlan = plans.find(
         (plan) => plan.id.toString() === selectedPlan
-    )
-    const buttonText = activeSub ? "Switch to this plan" : "Subscribe"
+    );
+    const buttonText = activeSub ? "Switch to this plan" : "Subscribe";
 
     return (
         <Card className="mx-auto max-w-3xl">
@@ -78,7 +78,7 @@ export default function PlanSelector({
                                 </p>
                                 {plan.trialDays > 0 && (
                                     <span className="text-xs">
-                                    {plan.trialDays}-day free trial
+                                        {plan.trialDays}-day free trial
                                     </span>
                                 )}
                             </div>
@@ -140,5 +140,5 @@ export default function PlanSelector({
                 </div>
             </CardFooter>
         </Card>
-    )
+    );
 }

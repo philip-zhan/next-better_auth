@@ -10,7 +10,8 @@
             "**",
             "!components/ui/**",
             "!migrations/**",
-            "!**/*.css"
+            "!**/*.css",
+            "!**/*.json"
         ]
     },
     "formatter": {
@@ -54,9 +55,7 @@
                     "fix": "safe",
                     "level": "info",
                     "options": {
-                        "functions": [
-                            "cn"
-                        ]
+                        "functions": ["cn"]
                     }
                 },
                 "useUniqueElementIds": "off"
@@ -65,8 +64,8 @@
     },
     "javascript": {
         "formatter": {
-            "semicolons": "asNeeded",
-            "trailingCommas": "none"
+            "semicolons": "always",
+            "trailingCommas": "es5"
         }
     },
     "assist": {

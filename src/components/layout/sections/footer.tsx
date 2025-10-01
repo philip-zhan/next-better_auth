@@ -1,22 +1,22 @@
-import { Mail } from "lucide-react"
-import GithubIcon from "@/components/icons/github-icon"
+import { Mail } from "lucide-react";
+import GithubIcon from "@/components/icons/github-icon";
 
-import Image from "next/image"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
-import { site } from "@/config/site"
+import Image from "next/image";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { site } from "@/config/site";
 
 interface FooterLinkProps {
-    href: string
-    label: string
-    icon?: React.ReactNode
-    external?: boolean
+    href: string;
+    label: string;
+    icon?: React.ReactNode;
+    external?: boolean;
 }
 
 interface FooterSectionProps {
-    title: string
-    links: FooterLinkProps[]
+    title: string;
+    links: FooterLinkProps[];
 }
 
 const footerSections: FooterSectionProps[] = [
@@ -26,48 +26,48 @@ const footerSections: FooterSectionProps[] = [
             { href: "#features", label: "Features" },
             { href: "#pricing", label: "Pricing" },
             { href: "#integrations", label: "Integrations" },
-            { href: "#api", label: "API" }
-        ]
+            { href: "#api", label: "API" },
+        ],
     },
     {
         title: "Company",
         links: [
             { href: "#about", label: "About Us" },
             { href: "#careers", label: "Careers" },
-            { href: "#blog", label: "Blog" }
-        ]
+            { href: "#blog", label: "Blog" },
+        ],
     },
     {
         title: "Resources",
         links: [
             { href: "#documentation", label: "Documentation" },
             { href: "#help", label: "Help Center" },
-            { href: "#status", label: "Status" }
-        ]
+            { href: "#status", label: "Status" },
+        ],
     },
     {
         title: "Legal",
         links: [
             { href: "#privacy", label: "Privacy Policy" },
             { href: "#terms", label: "Terms of Service" },
-            { href: "#cookies", label: "Cookie Policy" }
-        ]
-    }
-]
+            { href: "#cookies", label: "Cookie Policy" },
+        ],
+    },
+];
 
 const socialLinks: FooterLinkProps[] = [
     {
         href: site.links.github,
         label: "GitHub",
         icon: <GithubIcon className="size-5 fill-foreground" />,
-        external: true
+        external: true,
     },
     {
         href: `mailto:${site.mailSupport}`,
         label: "Email",
-        icon: <Mail className="size-5" />
-    }
-]
+        icon: <Mail className="size-5" />,
+    },
+];
 
 export const FooterSection = () => {
     return (
@@ -250,13 +250,12 @@ export const FooterSection = () => {
                         <div className="flex flex-col justify-between gap-4 lg:flex-row">
                             <div className="flex flex-col items-center gap-4 text-muted-foreground text-sm sm:flex-row">
                                 <p>
-                                    &copy; 2025 {site.name}. All rights reserved.
+                                    &copy; 2025 {site.name}. All rights
+                                    reserved.
                                 </p>
                             </div>
 
                             <div className="flex flex-col items-center gap-3 lg:flex-row lg:gap-6">
-                               
-                                
                                 <div className="flex items-center gap-2 text-muted-foreground text-sm">
                                     <span>Sponsored by</span>
                                     <Link
@@ -280,5 +279,5 @@ export const FooterSection = () => {
                 </div>
             </div>
         </footer>
-    )
-}
+    );
+};

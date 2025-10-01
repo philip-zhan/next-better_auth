@@ -1,9 +1,9 @@
-import { Navbar } from "@/components/layout/navbar"
-import { FooterSection } from "@/components/layout/sections/footer"
+import { Navbar } from "@/components/layout/navbar";
+import { FooterSection } from "@/components/layout/sections/footer";
 export default function MarketingLayout({
-    children
+    children,
 }: {
-    children: React.ReactNode
+    children: React.ReactNode;
 }) {
     return (
         <>
@@ -11,5 +11,5 @@ export default function MarketingLayout({
             {children}
             <FooterSection />
         </>
-    )
+    );
 }

@@ -1,36 +1,36 @@
-"use client"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { Building2, Clock, Mail, Phone } from "lucide-react"
-import { useForm } from "react-hook-form"
-import { z } from "zod"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardFooter } from "@/components/ui/card"
+"use client";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Building2, Clock, Mail, Phone } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import {
     Form,
     FormControl,
     FormField,
     FormItem,
     FormLabel,
-    FormMessage
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
+    FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
-    SelectValue
-} from "@/components/ui/select"
-import { site } from "@/config/site"
-import { Textarea } from "@/components/ui/textarea"
+    SelectValue,
+} from "@/components/ui/select";
+import { site } from "@/config/site";
+import { Textarea } from "@/components/ui/textarea";
 
 const formSchema = z.object({
     firstName: z.string().min(2).max(255),
     lastName: z.string().min(2).max(255),
     email: z.string().email(),
     subject: z.string().min(2).max(255),
-    message: z.string()
-})
+    message: z.string(),
+});
 
 export const ContactSection = () => {
     const form = useForm<z.infer<typeof formSchema>>({
@@ -40,17 +40,17 @@ export const ContactSection = () => {
             lastName: "",
             email: "",
             subject: "Web Development",
-            message: ""
-        }
-    })
+            message: "",
+        },
+    });
 
     function onSubmit(values: z.infer<typeof formSchema>) {
-        const { firstName, lastName, email, subject, message } = values
-        console.log(values)
+        const { firstName, lastName, email, subject, message } = values;
+        console.log(values);
 
-        const mailToLink = `mailto:${site.mailSupport}?subject=${subject}&body=Hello I am ${firstName} ${lastName}, my Email is ${email}. %0D%0A${message}`
+        const mailToLink = `mailto:${site.mailSupport}?subject=${subject}&body=Hello I am ${firstName} ${lastName}, my Email is ${email}. %0D%0A${message}`;
 
-        window.location.href = mailToLink
+        window.location.href = mailToLink;
     }
 
     return (
@@ -67,8 +67,9 @@ export const ContactSection = () => {
                         </h2>
                     </div>
                     <p className="mb-8 text-muted-foreground lg:w-5/6">
-                        We'd love to hear from you! Get in touch with us for any questions, 
-                        inquiries, or collaboration opportunities. We're here to help.
+                        We'd love to hear from you! Get in touch with us for any
+                        questions, inquiries, or collaboration opportunities.
+                        We're here to help.
                     </p>
 
                     <div className="flex flex-col gap-4">
@@ -243,7 +244,9 @@ export const ContactSection = () => {
                                     />
                                 </div>
 
-                                <Button className="mt-4 w-fit">Send message</Button>
+                                <Button className="mt-4 w-fit">
+                                    Send message
+                                </Button>
                             </form>
                         </Form>
                     </CardContent>
@@ -252,5 +255,5 @@ export const ContactSection = () => {
                 </Card>
             </section>
         </section>
-    )
-}
+    );
+};

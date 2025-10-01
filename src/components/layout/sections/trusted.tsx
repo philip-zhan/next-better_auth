@@ -1,9 +1,9 @@
-"use client"
-import { motion, useInView } from "framer-motion"
-import Image from "next/image"
-import { useRef } from "react"
-import Marquee from "@/components/ui/marquee"
-import { cn } from "@/lib/utils"
+"use client";
+import { motion, useInView } from "framer-motion";
+import Image from "next/image";
+import { useRef } from "react";
+import Marquee from "@/components/ui/marquee";
+import { cn } from "@/lib/utils";
 
 const logos = [
     { img: "/logos/logo-ispum-1.avif" },
@@ -11,14 +11,14 @@ const logos = [
     { img: "/logos/logo-ispum-3.avif" },
     { img: "/logos/logo-ispum-4.avif" },
     { img: "/logos/logo-ispum-5.avif" },
-    { img: "/logos/logo-ispum-6.avif" }
-]
+    { img: "/logos/logo-ispum-6.avif" },
+];
 
-const row = logos.slice(0, logos.length / 2)
+const row = logos.slice(0, logos.length / 2);
 
 const LogoCard = ({ img }: { img: string }) => {
-    const ref = useRef(null)
-    const isInView = useInView(ref, { once: true, margin: "-50px" })
+    const ref = useRef(null);
+    const isInView = useInView(ref, { once: true, margin: "-50px" });
 
     return (
         <motion.figure
@@ -42,8 +42,8 @@ const LogoCard = ({ img }: { img: string }) => {
                 />
             </div>
         </motion.figure>
-    )
-}
+    );
+};
 
 const Trusted = () => {
     return (
@@ -61,7 +61,7 @@ const Trusted = () => {
                 <div className="pointer-events-none absolute inset-y-0 right-0 w-1/3 bg-gradient-to-l from-background to-transparent" />
             </div>
         </div>
-    )
-}
+    );
+};
 
-export default Trusted
+export default Trusted;

@@ -5,16 +5,20 @@ import {
     SessionsCard,
     UpdateNameCard,
     UpdateAvatarCard,
-    ProvidersCard
-} from "@daveyplate/better-auth-ui"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { RiUser3Line, RiShieldLine, RiAlarmWarningLine } from "@remixicon/react"
-import { PageHeader } from "@/components/layout/page-header"
-import type { Metadata } from "next"
+    ProvidersCard,
+} from "@daveyplate/better-auth-ui";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+    RiUser3Line,
+    RiShieldLine,
+    RiAlarmWarningLine,
+} from "@remixicon/react";
+import { PageHeader } from "@/components/layout/page-header";
+import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-    title: "Settings"
-}
+    title: "Settings",
+};
 
 export default function SettingsPage() {
     return (
@@ -80,5 +84,5 @@ export default function SettingsPage() {
                 </div>
             </Tabs>
         </div>
-    )
+    );
 }

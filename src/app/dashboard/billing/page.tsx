@@ -1,8 +1,8 @@
-import { getActiveSubscription } from "@/lib/payments/actions"
-import { auth } from "@/lib/auth"
-import { PageHeader } from "@/components/layout/page-header"
-import { headers } from "next/headers"
-import CancelSubButton from "./cancel-sub-button"
+import { getActiveSubscription } from "@/lib/payments/actions";
+import { auth } from "@/lib/auth";
+import { PageHeader } from "@/components/layout/page-header";
+import { headers } from "next/headers";
+import CancelSubButton from "./cancel-sub-button";
 
 import {
     Zap,
@@ -10,23 +10,23 @@ import {
     CheckCircle,
     Users,
     CreditCard,
-    User
-} from "lucide-react"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+    User,
+} from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
     Card,
     CardHeader,
     CardTitle,
     CardDescription,
     CardContent,
-    CardFooter
-} from "@/components/ui/card"
-import PlanSelector from "./plan-selector"
+    CardFooter,
+} from "@/components/ui/card";
+import PlanSelector from "./plan-selector";
 
 export default async function Plans() {
-    const session = await auth.api.getSession({ headers: await headers() })
-    const data = await getActiveSubscription()
-    const activeSub = data.subscription
+    const session = await auth.api.getSession({ headers: await headers() });
+    const data = await getActiveSubscription();
+    const activeSub = data.subscription;
 
     return (
         <div className="space-y-6">
@@ -171,9 +171,9 @@ export default async function Plans() {
                                     </CardHeader>
                                     <CardContent className="text-center">
                                         <p className="mb-4 text-muted-foreground">
-                                            Choose a plan from the subscription tab.
+                                            Choose a plan from the subscription
+                                            tab.
                                         </p>
-                                        
                                     </CardContent>
                                 </Card>
                             )}
@@ -203,5 +203,5 @@ export default async function Plans() {
                 </div>
             </Tabs>
         </div>
-    )
+    );
 }

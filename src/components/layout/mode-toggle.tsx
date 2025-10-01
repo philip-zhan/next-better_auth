@@ -1,17 +1,17 @@
-"use client"
+"use client";
 
-import { motion } from "framer-motion"
-import { MoonIcon, SunIcon } from "lucide-react"
-import { useTheme } from "next-themes"
+import { motion } from "framer-motion";
+import { MoonIcon, SunIcon } from "lucide-react";
+import { useTheme } from "next-themes";
 
-import { Button } from "../ui/button"
+import { Button } from "../ui/button";
 
 export function ModeToggle() {
-    const { theme, setTheme } = useTheme()
+    const { theme, setTheme } = useTheme();
 
     const toggleTheme = () => {
-        setTheme(theme === "dark" ? "light" : "dark")
-    }
+        setTheme(theme === "dark" ? "light" : "dark");
+    };
 
     return (
         <Button
@@ -24,11 +24,11 @@ export function ModeToggle() {
                 initial={false}
                 animate={{
                     rotate: theme === "dark" ? 180 : 0,
-                    scale: theme === "dark" ? 0 : 1
+                    scale: theme === "dark" ? 0 : 1,
                 }}
                 transition={{
                     duration: 0.3,
-                    ease: "easeInOut"
+                    ease: "easeInOut",
                 }}
                 className="absolute"
             >
@@ -38,11 +38,11 @@ export function ModeToggle() {
                 initial={false}
                 animate={{
                     rotate: theme === "dark" ? 0 : -180,
-                    scale: theme === "dark" ? 1 : 0
+                    scale: theme === "dark" ? 1 : 0,
                 }}
                 transition={{
                     duration: 0.3,
-                    ease: "easeInOut"
+                    ease: "easeInOut",
                 }}
                 className="absolute"
             >
@@ -50,5 +50,5 @@ export function ModeToggle() {
             </motion.div>
             <span className="sr-only">Toggle theme</span>
         </Button>
-    )
+    );
 }

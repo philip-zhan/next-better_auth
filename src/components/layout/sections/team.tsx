@@ -1,40 +1,38 @@
-import Image from "next/image"
-import Link from "next/link"
-import GithubIcon from "@/components/icons/github-icon"
-import LinkedInIcon from "@/components/icons/linkedin-icon"
-import XIcon from "@/components/icons/x-icon"
-import { Card, CardFooter, CardTitle } from "@/components/ui/card"
+import Image from "next/image";
+import Link from "next/link";
+import GithubIcon from "@/components/icons/github-icon";
+import LinkedInIcon from "@/components/icons/linkedin-icon";
+import XIcon from "@/components/icons/x-icon";
+import { Card, CardFooter, CardTitle } from "@/components/ui/card";
 
 interface TeamProps {
-    imageUrl: string
-    firstName: string
-    lastName: string
-    positions: string[]
-    socialNetworks: SocialNetworkProps[]
+    imageUrl: string;
+    firstName: string;
+    lastName: string;
+    positions: string[];
+    socialNetworks: SocialNetworkProps[];
 }
 interface SocialNetworkProps {
-    name: string
-    url: string
+    name: string;
+    url: string;
 }
 export const TeamSection = () => {
     const teamList: TeamProps[] = [
         {
-            imageUrl:
-                "/indie.png",
+            imageUrl: "/indie.png",
             firstName: "Indie",
             lastName: "CEO",
             positions: ["Fullstack Developer", "Creator Of This Website"],
             socialNetworks: [
-                
                 {
                     name: "Github",
-                    url: "https://github.com/indieceo"
+                    url: "https://github.com/indieceo",
                 },
                 {
                     name: "X",
-                    url: "https://x.com/indieceo"
-                }
-            ]
+                    url: "https://x.com/indieceo",
+                },
+            ],
         },
         {
             imageUrl:
@@ -45,13 +43,13 @@ export const TeamSection = () => {
             socialNetworks: [
                 {
                     name: "LinkedIn",
-                    url: "https://www.linkedin.com/company/posthyve"
+                    url: "https://www.linkedin.com/company/posthyve",
                 },
                 {
                     name: "X",
-                    url: "https://x.com/indieceo"
-                }
-            ]
+                    url: "https://x.com/indieceo",
+                },
+            ],
         },
         {
             imageUrl:
@@ -62,13 +60,13 @@ export const TeamSection = () => {
             socialNetworks: [
                 {
                     name: "LinkedIn",
-                    url: "https://www.linkedin.com/company/posthyve"
+                    url: "https://www.linkedin.com/company/posthyve",
                 },
                 {
                     name: "Github",
-                    url: "https://github.com/indieceo"
-                }
-            ]
+                    url: "https://github.com/indieceo",
+                },
+            ],
         },
         {
             imageUrl:
@@ -79,17 +77,17 @@ export const TeamSection = () => {
             socialNetworks: [
                 {
                     name: "LinkedIn",
-                    url: "https://www.linkedin.com/company/posthyve"
+                    url: "https://www.linkedin.com/company/posthyve",
                 },
                 {
                     name: "Github",
-                    url: "https://github.com/indieceo"
+                    url: "https://github.com/indieceo",
                 },
                 {
                     name: "X",
-                    url: "https://x.com/indieceo"
-                }
-            ]
+                    url: "https://x.com/indieceo",
+                },
+            ],
         },
         {
             imageUrl:
@@ -100,9 +98,9 @@ export const TeamSection = () => {
             socialNetworks: [
                 {
                     name: "LinkedIn",
-                    url: "https://www.linkedin.com/company/posthyve"
-                }
-            ]
+                    url: "https://www.linkedin.com/company/posthyve",
+                },
+            ],
         },
         {
             imageUrl:
@@ -113,13 +111,13 @@ export const TeamSection = () => {
             socialNetworks: [
                 {
                     name: "LinkedIn",
-                    url: "https://www.linkedin.com/company/posthyve"
+                    url: "https://www.linkedin.com/company/posthyve",
                 },
                 {
                     name: "Github",
-                    url: "https://github.com/indieceo"
-                }
-            ]
+                    url: "https://github.com/indieceo",
+                },
+            ],
         },
         {
             imageUrl:
@@ -130,17 +128,17 @@ export const TeamSection = () => {
             socialNetworks: [
                 {
                     name: "LinkedIn",
-                    url: "https://www.linkedin.com/company/posthyve"
+                    url: "https://www.linkedin.com/company/posthyve",
                 },
                 {
                     name: "Github",
-                    url: "https://github.com/indieceo"
+                    url: "https://github.com/indieceo",
                 },
                 {
                     name: "X",
-                    url: "https://x.com/indieceo"
-                }
-            ]
+                    url: "https://x.com/indieceo",
+                },
+            ],
         },
         {
             imageUrl:
@@ -151,21 +149,21 @@ export const TeamSection = () => {
             socialNetworks: [
                 {
                     name: "X",
-                    url: "https://x.com/indieceo"
-                }
-            ]
-        }
-    ]
+                    url: "https://x.com/indieceo",
+                },
+            ],
+        },
+    ];
     const socialIcon = (socialName: string) => {
         switch (socialName) {
             case "LinkedIn":
-                return <LinkedInIcon />
+                return <LinkedInIcon />;
             case "Github":
-                return <GithubIcon />
+                return <GithubIcon />;
             case "X":
-                return <XIcon />
+                return <XIcon />;
         }
-    }
+    };
 
     return (
         <section id="team" className="container mx-auto px-4 py-24 sm:py-32">
@@ -187,7 +185,7 @@ export const TeamSection = () => {
                             firstName,
                             lastName,
                             positions,
-                            socialNetworks
+                            socialNetworks,
                         },
                         index
                     ) => (
@@ -247,5 +245,5 @@ export const TeamSection = () => {
                 )}
             </div>
         </section>
-    )
-}
+    );
+};

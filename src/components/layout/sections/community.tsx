@@ -1,12 +1,12 @@
-import { Github, Star } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Github, Star } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
     Card,
     CardContent,
     CardFooter,
     CardHeader,
-    CardTitle
-} from "@/components/ui/card"
+    CardTitle,
+} from "@/components/ui/card";
 
 export const CommunitySection = () => {
     return (
@@ -18,7 +18,9 @@ export const CommunitySection = () => {
                         <CardHeader className="flex flex-col items-center">
                             <Github className="mb-4 h-16 w-16" />
                             <CardTitle className="flex flex-col items-center text-center font-bold text-4xl md:text-5xl">
-                                <div className="whitespace-nowrap">Contribute to this</div>
+                                <div className="whitespace-nowrap">
+                                    Contribute to this
+                                </div>
                                 <span className="bg-gradient-to-r from-[#da5319] to-primary bg-clip-text text-transparent py-1">
                                     Project
                                 </span>
@@ -48,5 +50,5 @@ export const CommunitySection = () => {
             </div>
             <hr className="border-secondary" />
         </section>
-    )
-}
+    );
+};

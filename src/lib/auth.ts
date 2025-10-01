@@ -44,13 +44,13 @@ export const auth = betterAuth({
                             "p",
                             null,
                             "Someone requested a password reset for your account. If this was you, ",
-                            "click the button below to reset your password.",
+                            "click the button below to reset your password."
                         ),
                         React.createElement(
                             "p",
                             null,
-                            "If you didn't request this, you can safely ignore this email.",
-                        ),
+                            "If you didn't request this, you can safely ignore this email."
+                        )
                     ),
                     action: "Reset Password",
                     url,

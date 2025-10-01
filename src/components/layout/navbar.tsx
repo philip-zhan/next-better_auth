@@ -1,81 +1,81 @@
-"use client"
-import { SignedIn, SignedOut, UserButton } from "@daveyplate/better-auth-ui"
-import { Menu, X } from "lucide-react"
-import { RiGithubFill } from "@remixicon/react"
-import Image from "next/image"
-import Link from "next/link"
-import React from "react"
-import { ModeToggle } from "./mode-toggle"
-import { Button } from "../ui/button"
+"use client";
+import { SignedIn, SignedOut, UserButton } from "@daveyplate/better-auth-ui";
+import { Menu, X } from "lucide-react";
+import { RiGithubFill } from "@remixicon/react";
+import Image from "next/image";
+import Link from "next/link";
+import React from "react";
+import { ModeToggle } from "./mode-toggle";
+import { Button } from "../ui/button";
 import {
     NavigationMenu,
     NavigationMenuContent,
     NavigationMenuItem,
     NavigationMenuLink,
     NavigationMenuList,
-    NavigationMenuTrigger
-} from "../ui/navigation-menu"
-import { Separator } from "../ui/separator"
+    NavigationMenuTrigger,
+} from "../ui/navigation-menu";
+import { Separator } from "../ui/separator";
 import {
     Sheet,
     SheetContent,
     SheetFooter,
     SheetHeader,
     SheetTitle,
-    SheetTrigger
-} from "../ui/sheet"
-import { site } from "@/config/site"
+    SheetTrigger,
+} from "../ui/sheet";
+import { site } from "@/config/site";
 
 interface RouteProps {
-    href: string
-    label: string
+    href: string;
+    label: string;
 }
 
 interface FeatureProps {
-    title: string
-    description: string
+    title: string;
+    description: string;
 }
 
 const routeList: RouteProps[] = [
     {
         href: "#features",
-        label: "Features"
+        label: "Features",
     },
     {
         href: "#testimonials",
-        label: "Testimonials"
+        label: "Testimonials",
     },
     {
         href: "#pricing",
-        label: "Pricing"
+        label: "Pricing",
     },
     {
         href: "#contact",
-        label: "Contact"
-    }
-]
+        label: "Contact",
+    },
+];
 
 const featureList: FeatureProps[] = [
     {
         title: "Showcase Your Value",
         description:
-            "Highlight how your product solves user problems effectively."
+            "Highlight how your product solves user problems effectively.",
     },
     {
         title: "Build Trust",
         description:
-            "Leverage social proof elements to establish trust and credibility."
+            "Leverage social proof elements to establish trust and credibility.",
     },
 
     {
         title: "Scale Fast",
         description:
-            "Built-in tools and integrations to help you scale your business."
-    }
-]
+            "Built-in tools and integrations to help you scale your business.",
+    },
+];
 
 export const Navbar = () => {
-    const [isOpen, setIsOpen] = React.useState(false)
+    const [isOpen, setIsOpen] = React.useState(false);
 
     return (
         <div className="sticky top-2 z-50 mx-auto w-[98%] max-w-7xl px-4">
@@ -123,7 +123,7 @@ export const Navbar = () => {
                                                 {featureList.map(
                                                     ({
                                                         title,
-                                                        description
+                                                        description,
                                                     }) => (
                                                         <li key={title}>
                                                             <NavigationMenuLink
@@ -169,7 +169,7 @@ export const Navbar = () => {
 
                     {/* Desktop Actions */}
                     <div className="hidden items-center gap-2 lg:flex">
-                    <Button
+                        <Button
                             asChild
                             variant="outline"
                             size="icon"
@@ -184,7 +184,7 @@ export const Navbar = () => {
                             </Link>
                         </Button>
                         <ModeToggle />
-                        
+
                         <SignedOut>
                             <Button
                                 asChild
@@ -347,5 +347,5 @@ export const Navbar = () => {
                 </div>
             </nav>
         </div>
-    )
-}
+    );
+};

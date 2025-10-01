@@ -1,20 +1,20 @@
-"use client"
+"use client";
 
-import { RedirectToSignUp, SignedIn } from "@daveyplate/better-auth-ui"
-import { AppSidebar } from "@/components/layout/app-sidebar"
-import { DynamicBreadcrumb } from "@/components/layout/dynamic-breadcrumb"
-import { ModeToggle } from "@/components/layout/mode-toggle"
-import { Separator } from "@/components/ui/separator"
+import { RedirectToSignUp, SignedIn } from "@daveyplate/better-auth-ui";
+import { AppSidebar } from "@/components/layout/app-sidebar";
+import { DynamicBreadcrumb } from "@/components/layout/dynamic-breadcrumb";
+import { ModeToggle } from "@/components/layout/mode-toggle";
+import { Separator } from "@/components/ui/separator";
 import {
     SidebarInset,
     SidebarProvider,
-    SidebarTrigger
-} from "@/components/ui/sidebar"
+    SidebarTrigger,
+} from "@/components/ui/sidebar";
 
 export default function ProtectedPage({
-    children
+    children,
 }: {
-    children: React.ReactNode
+    children: React.ReactNode;
 }) {
     return (
         <>
@@ -50,5 +50,5 @@ export default function ProtectedPage({
                 </SidebarProvider>
             </SignedIn>
         </>
-    )
+    );
 }
