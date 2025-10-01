@@ -10,9 +10,6 @@ import {
     SidebarProvider,
     SidebarTrigger
 } from "@/components/ui/sidebar"
-import { Button } from "@/components/ui/button"
-import Link from "next/link"
-import GithubIcon from "@/components/icons/github-icon"
 
 export default function ProtectedPage({
     children
@@ -40,21 +37,6 @@ export default function ProtectedPage({
                                         </div>
                                     </div>
                                     {/* Right side */}
-                                    <Button
-                                        asChild
-                                        variant="outline"
-                                        size="sm"
-                                        className="font-semibold"
-                                    >
-                                        <Link
-                                            href="https://github.com/indieceo/Indiesaas"
-                                            target="_blank"
-                                            aria-label="Clone Now"
-                                        >
-                                            <GithubIcon className="mr-2 size-4 fill-foreground" />
-                                            Clone
-                                        </Link>
-                                    </Button>
                                     <ModeToggle />
                                 </header>
                                 <div className="overflow-hidden">
