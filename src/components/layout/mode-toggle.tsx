@@ -1,16 +1,30 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 import { motion } from "framer-motion";
 import { MoonIcon, SunIcon } from "lucide-react";
 import { useTheme } from "next-themes";
-
 import { Button } from "../ui/button";
 
 export function ModeToggle() {
-    const { theme, setTheme } = useTheme();
+    const { theme, resolvedTheme, setTheme } = useTheme();
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    const isDark = mounted
+        ? (resolvedTheme ?? theme) === "dark"
+        : false;
 
     const toggleTheme = () => {
-        setTheme(theme === "dark" ? "light" : "dark");
+        if (!mounted) {
+            return;
+        }
+
+        setTheme(isDark ? "light" : "dark");
     };
 
     return (
@@ -23,8 +37,8 @@ export function ModeToggle() {
             <motion.div
                 initial={false}
                 animate={{
-                    rotate: theme === "dark" ? 180 : 0,
-                    scale: theme === "dark" ? 0 : 1,
+                    rotate: isDark ? 180 : 0,
+                    scale: isDark ? 0 : 1,
                 }}
                 transition={{
                     duration: 0.3,
@@ -37,8 +51,8 @@ export function ModeToggle() {
             <motion.div
                 initial={false}
                 animate={{
-                    rotate: theme === "dark" ? 0 : -180,
-                    scale: theme === "dark" ? 1 : 0,
+                    rotate: isDark ? 0 : -180,
+                    scale: isDark ? 1 : 0,
                 }}
                 transition={{
                     duration: 0.3,
