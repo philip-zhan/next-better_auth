@@ -1,5 +1,3 @@
-"use client";
-
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { DynamicBreadcrumb } from "@/components/layout/dynamic-breadcrumb";
 import { ModeToggle } from "@/components/layout/mode-toggle";
@@ -9,14 +7,19 @@ import {
     SidebarProvider,
     SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { cookies } from "next/headers";
 
-export default function ProtectedPage({
+export default async function ProtectedPage({
     children,
 }: {
     children: React.ReactNode;
 }) {
+    const cookieStore = await cookies();
+    const sidebarState = cookieStore.get("sidebar_state");
+    const defaultOpen = sidebarState?.value === "true";
+
     return (
-        <SidebarProvider defaultOpen={false}>
+        <SidebarProvider defaultOpen={defaultOpen}>
             <AppSidebar />
             <SidebarInset>
                 <div className="@container">
