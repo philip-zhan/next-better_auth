@@ -1,5 +1,5 @@
 {
-    "name": "indiesaas",
+    "name": "next-better_auth",
     "version": "0.0.1",
     "private": true,
     "scripts": {
@@ -7,6 +7,7 @@
         "build": "next build",
         "start": "next start",
         "lint": "biome check",
+        "format": "biome format --write",
         "check-types": "tsc --noEmit"
     },
     "dependencies": {
