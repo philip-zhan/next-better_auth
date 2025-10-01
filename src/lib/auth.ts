@@ -7,7 +7,7 @@ import { Resend } from "resend"
 import { EmailTemplate } from "@daveyplate/better-auth-ui/server"
 import React from "react"
 import { db } from "@/database/db"
-import * as schema from "@/database/schema"
+import * as schema from "@/database/schema/auth-schema"
 import { type Plan, plans } from "@/lib/payments/plans"
 import { site } from "@/config/site"
 

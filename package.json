@@ -5,10 +5,16 @@
     "scripts": {
         "dev": "next dev --turbopack",
         "build": "next build",
+        "build:vercel": "pnpm build && pnpm db:migrate",
         "start": "next start",
         "lint": "biome check",
         "format": "biome format --write",
-        "check-types": "tsc --noEmit"
+        "check-types": "tsc --noEmit",
+        "db:generate": "drizzle-kit generate",
+        "db:migrate": "drizzle-kit migrate",
+        "db:push": "drizzle-kit push",
+        "db:drop": "drizzle-kit drop",
+        "auth:generate": "npx @better-auth/cli generate --output src/database/schema/auth-schema.ts"
     },
     "dependencies": {
         "@better-auth/stripe": "^1.2.12",
