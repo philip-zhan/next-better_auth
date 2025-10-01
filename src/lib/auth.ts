@@ -12,7 +12,7 @@ import { type Plan, plans } from "@/lib/payments/plans"
 import { site } from "@/config/site"
 
 const stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-    apiVersion: "2025-06-30.basil",
+    apiVersion: "2025-08-27.basil",
     typescript: true
 })
 
@@ -65,14 +65,6 @@ export const auth = betterAuth({
             clientId: process.env.GITHUB_CLIENT_ID as string,
             clientSecret: process.env.GITHUB_CLIENT_SECRET as string
         },
-        google: {
-            clientId: process.env.GOOGLE_CLIENT_ID as string,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET as string
-        },
-        twitter: {
-            clientId: process.env.TWITTER_CLIENT_ID as string,
-            clientSecret: process.env.TWITTER_CLIENT_SECRET as string
-        }
     },
     plugins: [
         stripe({

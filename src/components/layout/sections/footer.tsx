@@ -1,7 +1,5 @@
 import { Mail } from "lucide-react"
-import XIcon from "@/components/icons/x-icon"
 import GithubIcon from "@/components/icons/github-icon"
-import LinkedInIcon from "@/components/icons/linkedin-icon"
 
 import Image from "next/image"
 import Link from "next/link"
@@ -62,18 +60,6 @@ const socialLinks: FooterLinkProps[] = [
         href: site.links.github,
         label: "GitHub",
         icon: <GithubIcon className="size-5 fill-foreground" />,
-        external: true
-    },
-    {
-        href: site.links.twitter,
-        label: "Twitter",
-        icon: <XIcon className="size-5 fill-foreground" />,
-        external: true
-    },
-    {
-        href: "https://linkedin.com",
-        label: "LinkedIn",
-        icon: <LinkedInIcon className="size-5 fill-foreground" />,
         external: true
     },
     {
