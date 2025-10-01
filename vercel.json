@@ -1,3 +1,9 @@
 {
-    "buildCommand": "pnpm build:vercel"
+    "buildCommand": "pnpm build:vercel",
+    "crons": [
+        {
+            "path": "/api/cron",
+            "schedule": "0 * * * *"
+        }
+    ]
 }

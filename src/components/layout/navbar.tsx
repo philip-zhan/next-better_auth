@@ -1,4 +1,5 @@
 "use client";
+
 import { SignedIn, SignedOut, UserButton } from "@daveyplate/better-auth-ui";
 import { Menu, X } from "lucide-react";
 import { RiGithubFill } from "@remixicon/react";
