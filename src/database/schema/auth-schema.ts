@@ -1,4 +1,10 @@
-import { pgTable, text, timestamp, boolean, integer } from "drizzle-orm/pg-core"
+import {
+    pgTable,
+    text,
+    timestamp,
+    boolean,
+    integer,
+} from "drizzle-orm/pg-core";
 
 export const users = pgTable("users", {
     id: text("id").primaryKey(),
@@ -11,8 +17,12 @@ export const users = pgTable("users", {
         .defaultNow()
         .$onUpdate(() => /* @__PURE__ */ new Date())
         .notNull(),
-    stripeCustomerId: text("stripe_customer_id")
-})
+    role: text("role"),
+    banned: boolean("banned").default(false),
+    banReason: text("ban_reason"),
+    banExpires: timestamp("ban_expires"),
+    stripeCustomerId: text("stripe_customer_id"),
+});
 
 export const sessions = pgTable("sessions", {
     id: text("id").primaryKey(),
@@ -26,8 +36,9 @@ export const sessions = pgTable("sessions", {
     userAgent: text("user_agent"),
     userId: text("user_id")
         .notNull()
-        .references(() => users.id, { onDelete: "cascade" })
-})
+        .references(() => users.id, { onDelete: "cascade" }),
+    impersonatedBy: text("impersonated_by"),
+});
 
 export const accounts = pgTable("accounts", {
     id: text("id").primaryKey(),
@@ -46,8 +57,8 @@ export const accounts = pgTable("accounts", {
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
         .$onUpdate(() => /* @__PURE__ */ new Date())
-        .notNull()
-})
+        .notNull(),
+});
 
 export const verifications = pgTable("verifications", {
     id: text("id").primaryKey(),
@@ -58,8 +69,34 @@ export const verifications = pgTable("verifications", {
     updatedAt: timestamp("updated_at")
         .defaultNow()
         .$onUpdate(() => /* @__PURE__ */ new Date())
+        .notNull(),
+});
+
+export const apikeys = pgTable("apikeys", {
+    id: text("id").primaryKey(),
+    name: text("name"),
+    start: text("start"),
+    prefix: text("prefix"),
+    key: text("key").notNull(),
+    userId: text("user_id")
         .notNull()
-})
+        .references(() => users.id, { onDelete: "cascade" }),
+    refillInterval: integer("refill_interval"),
+    refillAmount: integer("refill_amount"),
+    lastRefillAt: timestamp("last_refill_at"),
+    enabled: boolean("enabled").default(true),
+    rateLimitEnabled: boolean("rate_limit_enabled").default(true),
+    rateLimitTimeWindow: integer("rate_limit_time_window").default(86400000),
+    rateLimitMax: integer("rate_limit_max").default(10),
+    requestCount: integer("request_count").default(0),
+    remaining: integer("remaining"),
+    lastRequest: timestamp("last_request"),
+    expiresAt: timestamp("expires_at"),
+    createdAt: timestamp("created_at").notNull(),
+    updatedAt: timestamp("updated_at").notNull(),
+    permissions: text("permissions"),
+    metadata: text("metadata"),
+});
 
 export const subscriptions = pgTable("subscriptions", {
     id: text("id").primaryKey(),
@@ -73,5 +110,5 @@ export const subscriptions = pgTable("subscriptions", {
     trialStart: timestamp("trial_start"),
     trialEnd: timestamp("trial_end"),
     cancelAtPeriodEnd: boolean("cancel_at_period_end").default(false),
-    seats: integer("seats")
-})
+    seats: integer("seats"),
+});

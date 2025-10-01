@@ -1,33 +1,34 @@
-import { betterAuth } from "better-auth"
-import { drizzleAdapter } from "better-auth/adapters/drizzle"
-import { stripe } from "@better-auth/stripe"
-import Stripe from "stripe"
-import { headers } from "next/headers"
-import { Resend } from "resend"
-import { EmailTemplate } from "@daveyplate/better-auth-ui/server"
-import React from "react"
-import { db } from "@/database/db"
-import * as schema from "@/database/schema/auth-schema"
-import { type Plan, plans } from "@/lib/payments/plans"
-import { site } from "@/config/site"
+import { betterAuth } from "better-auth";
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { stripe } from "@better-auth/stripe";
+import Stripe from "stripe";
+import { headers } from "next/headers";
+import { Resend } from "resend";
+import { EmailTemplate } from "@daveyplate/better-auth-ui/server";
+import React from "react";
+import { db } from "@/database/db";
+import * as schema from "@/database/schema/auth-schema";
+import { type Plan, plans } from "@/lib/payments/plans";
+import { site } from "@/config/site";
+import { admin, apiKey } from "better-auth/plugins";
 
 const stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY!, {
     apiVersion: "2025-08-27.basil",
-    typescript: true
-})
+    typescript: true,
+});
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export const auth = betterAuth({
     database: drizzleAdapter(db, {
         provider: "pg",
         usePlural: true,
-        schema
+        schema,
     }),
     emailAndPassword: {
         enabled: true,
         sendResetPassword: async ({ user, url, token }, request) => {
-            const name = user.name || user.email.split("@")[0]
+            const name = user.name || user.email.split("@")[0];
 
             await resend.emails.send({
                 from: site.mailFrom,
@@ -43,30 +44,32 @@ export const auth = betterAuth({
                             "p",
                             null,
                             "Someone requested a password reset for your account. If this was you, ",
-                            "click the button below to reset your password."
+                            "click the button below to reset your password.",
                         ),
                         React.createElement(
                             "p",
                             null,
-                            "If you didn't request this, you can safely ignore this email."
-                        )
+                            "If you didn't request this, you can safely ignore this email.",
+                        ),
                     ),
                     action: "Reset Password",
                     url,
                     siteName: site.name,
                     baseUrl: site.url,
-                    imageUrl: `${site.url}/logo.png` // svg are not supported by resend
-                })
-            })
-        }
+                    imageUrl: `${site.url}/logo.png`, // svg are not supported by resend
+                }),
+            });
+        },
     },
     socialProviders: {
         github: {
             clientId: process.env.GITHUB_CLIENT_ID as string,
-            clientSecret: process.env.GITHUB_CLIENT_SECRET as string
+            clientSecret: process.env.GITHUB_CLIENT_SECRET as string,
         },
     },
     plugins: [
+        admin(),
+        apiKey(),
         stripe({
             stripeClient,
             stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET!,
@@ -78,35 +81,35 @@ export const auth = betterAuth({
                     const checkoutSession: {
                         params: {
                             subscription_data?: {
-                                trial_period_days: number
-                            }
-                        }
+                                trial_period_days: number;
+                            };
+                        };
                     } = {
-                        params: {}
-                    }
+                        params: {},
+                    };
 
                     if (user.trialAllowed) {
                         checkoutSession.params.subscription_data = {
-                            trial_period_days: (plan as Plan).trialDays
-                        }
+                            trial_period_days: (plan as Plan).trialDays,
+                        };
                     }
 
-                    return checkoutSession
+                    return checkoutSession;
                 },
                 onSubscriptionComplete: async ({ event }) => {
                     const eventDataObject = event.data
-                        .object as Stripe.Checkout.Session
-                    const userId = eventDataObject.metadata?.userId
-                }
-            }
-        })
-    ]
-})
+                        .object as Stripe.Checkout.Session;
+                    const userId = eventDataObject.metadata?.userId;
+                },
+            },
+        }),
+    ],
+});
 
 export async function getActiveSubscription() {
-    const nextHeaders = await headers()
+    const nextHeaders = await headers();
     const subscriptions = await auth.api.listActiveSubscriptions({
-        headers: nextHeaders
-    })
-    return subscriptions.find((s) => s.status === "active")
+        headers: nextHeaders,
+    });
+    return subscriptions.find((s) => s.status === "active");
 }
