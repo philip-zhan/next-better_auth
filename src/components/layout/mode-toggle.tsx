@@ -1,31 +1,36 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
 import { motion } from "framer-motion";
 import { MoonIcon, SunIcon } from "lucide-react";
 import { useTheme } from "next-themes";
+import { useEffect, useState } from "react";
 import { Button } from "../ui/button";
 
 export function ModeToggle() {
-    const { theme, resolvedTheme, setTheme } = useTheme();
+    const { theme, setTheme } = useTheme();
     const [mounted, setMounted] = useState(false);
 
+    // Prevent hydration mismatch by only rendering after mount
     useEffect(() => {
         setMounted(true);
     }, []);
 
-    const isDark = mounted
-        ? (resolvedTheme ?? theme) === "dark"
-        : false;
-
     const toggleTheme = () => {
-        if (!mounted) {
-            return;
-        }
-
-        setTheme(isDark ? "light" : "dark");
+        setTheme(theme === "dark" ? "light" : "dark");
     };
+
+    if (!mounted) {
+        return (
+            <Button
+                variant="outline"
+                size="icon"
+                className="relative size-10 overflow-hidden rounded-full"
+            >
+                <SunIcon className="h-[1.2rem] w-[1.2rem]" />
+                <span className="sr-only">Toggle theme</span>
+            </Button>
+        );
+    }
 
     return (
         <Button
@@ -37,8 +42,8 @@ export function ModeToggle() {
             <motion.div
                 initial={false}
                 animate={{
-                    rotate: isDark ? 180 : 0,
-                    scale: isDark ? 0 : 1,
+                    rotate: theme === "dark" ? 180 : 0,
+                    scale: theme === "dark" ? 0 : 1,
                 }}
                 transition={{
                     duration: 0.3,
@@ -51,8 +56,8 @@ export function ModeToggle() {
             <motion.div
                 initial={false}
                 animate={{
-                    rotate: isDark ? 0 : -180,
-                    scale: isDark ? 1 : 0,
+                    rotate: theme === "dark" ? 0 : -180,
+                    scale: theme === "dark" ? 1 : 0,
                 }}
                 transition={{
                     duration: 0.3,
