@@ -36,6 +36,7 @@
         "@radix-ui/react-tabs": "^1.1.12",
         "@radix-ui/react-tooltip": "^1.2.7",
         "@remixicon/react": "^4.6.0",
+        "@tanstack/react-query": "^5.90.2",
         "@uploadthing/react": "^7.3.2",
         "better-auth": "^1.2.12",
         "class-variance-authority": "^0.7.1",
@@ -64,6 +65,7 @@
         "@better-auth/cli": "^1.2.9",
         "@biomejs/biome": "2.0.0",
         "@tailwindcss/postcss": "^4.1.10",
+        "@tanstack/react-query-devtools": "^5.90.2",
         "@types/node": "^24.0.3",
         "@types/pg": "^8.15.4",
         "@types/react": "^19.1.8",
@@ -80,5 +82,5 @@
     "pnpm": {
         "overrides": {}
     },
-    "packageManager": "pnpm@10.12.1"
+    "packageManager": "pnpm@10.17.1"
 }
