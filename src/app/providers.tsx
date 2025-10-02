@@ -15,47 +15,46 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 const queryClient = new QueryClient();
 
 export function Providers({ children }: { children: ReactNode }) {
-    const router = useRouter();
-    const { startUpload } = useUploadThing("avatarUploader");
+  const router = useRouter();
+  const { startUpload } = useUploadThing("avatarUploader");
 
-    return (
-        <QueryClientProvider client={queryClient}>
-            <ThemeProvider
-                attribute="class"
-                defaultTheme="dark"
-                enableSystem
-                disableTransitionOnChange
-            >
-                <AuthUIProvider
-                    authClient={authClient}
-                    navigate={router.push}
-                    replace={router.replace}
-                    apiKey={true}
-                    onSessionChange={() => {
-                        router.refresh();
-                    }}
-                    settings={{
-                        url: "/dashboard/settings",
-                    }}
-                    social={{
-                        providers: ["github"],
-                    }}
-                    avatar={{
-                        upload: async (file: File) => {
-                            const uploadRes = await startUpload([file]);
-                            if (!uploadRes?.[0])
-                                throw new Error("Upload failed");
-                            return uploadRes[0].ufsUrl;
-                        },
-                    }}
-                    Link={Link}
-                >
-                    <NextTopLoader color="var(--primary)" showSpinner={false} />
-                    {children}
-                    <Toaster />
-                </AuthUIProvider>
-            </ThemeProvider>
-            <ReactQueryDevtools initialIsOpen={false} />
-        </QueryClientProvider>
-    );
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="dark"
+        enableSystem
+        disableTransitionOnChange
+      >
+        <AuthUIProvider
+          authClient={authClient}
+          navigate={router.push}
+          replace={router.replace}
+          apiKey={true}
+          onSessionChange={() => {
+            router.refresh();
+          }}
+          settings={{
+            url: "/dashboard/settings",
+          }}
+          social={{
+            providers: ["github"],
+          }}
+          avatar={{
+            upload: async (file: File) => {
+              const uploadRes = await startUpload([file]);
+              if (!uploadRes?.[0]) throw new Error("Upload failed");
+              return uploadRes[0].ufsUrl;
+            },
+          }}
+          Link={Link}
+        >
+          <NextTopLoader color="var(--primary)" showSpinner={false} />
+          {children}
+          <Toaster />
+        </AuthUIProvider>
+      </ThemeProvider>
+      <ReactQueryDevtools initialIsOpen={false} />
+    </QueryClientProvider>
+  );
 }

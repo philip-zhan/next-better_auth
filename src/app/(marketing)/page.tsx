@@ -12,52 +12,52 @@ import Trusted from "@/components/layout/sections/trusted";
 import { site } from "@/config/site";
 
 export const metadata = {
+  title: site.name,
+  description: site.description,
+  openGraph: {
+    type: "website",
+    url: site.url,
     title: site.name,
     description: site.description,
-    openGraph: {
-        type: "website",
-        url: site.url,
-        title: site.name,
-        description: site.description,
-        images: [
-            {
-                url: site.ogImage,
-                width: 1200,
-                height: 750,
-                alt: site.name,
-            },
-        ],
-    },
-    twitter: {
-        card: "summary_large_image",
-        site: site.url,
-        title: site.name,
-        description: site.description,
-        images: [
-            {
-                url: site.ogImage,
-                width: 1200,
-                height: 750,
-                alt: site.name,
-            },
-        ],
-    },
+    images: [
+      {
+        url: site.ogImage,
+        width: 1200,
+        height: 750,
+        alt: site.name,
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    site: site.url,
+    title: site.name,
+    description: site.description,
+    images: [
+      {
+        url: site.ogImage,
+        width: 1200,
+        height: 750,
+        alt: site.name,
+      },
+    ],
+  },
 };
 
 export default function Home() {
-    return (
-        <>
-            <HeroSection />
-            <Trusted />
-            <BenefitsSection />
-            <FeaturesSection />
-            <ServicesSection />
-            <TestimonialSection />
-            <TeamSection />
-            <CommunitySection />
-            <PricingSection />
-            <ContactSection />
-            <FAQSection />
-        </>
-    );
+  return (
+    <>
+      <HeroSection />
+      <Trusted />
+      <BenefitsSection />
+      <FeaturesSection />
+      <ServicesSection />
+      <TestimonialSection />
+      <TeamSection />
+      <CommunitySection />
+      <PricingSection />
+      <ContactSection />
+      <FAQSection />
+    </>
+  );
 }
