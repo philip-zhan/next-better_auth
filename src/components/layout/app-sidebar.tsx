@@ -34,8 +34,8 @@ const data = {
             items: [
                 { title: "Dashboard", url: "/dashboard", icon: RiSpeedUpLine },
                 {
-                    title: "Analytics",
-                    url: "/dashboard/analytics",
+                    title: "Chat",
+                    url: "/dashboard/chat",
                     icon: RiLineChartLine,
                 },
                 {

@@ -17,6 +17,8 @@
         "auth:generate": "npx @better-auth/cli generate --output src/database/schema/auth-schema.ts"
     },
     "dependencies": {
+        "@ai-sdk/openai": "^2.0.42",
+        "@ai-sdk/react": "^2.0.59",
         "@better-auth/stripe": "^1.2.12",
         "@daveyplate/better-auth-ui": "^2.0.8",
         "@hookform/resolvers": "^5.1.1",
@@ -38,6 +40,7 @@
         "@remixicon/react": "^4.6.0",
         "@tanstack/react-query": "^5.90.2",
         "@uploadthing/react": "^7.3.2",
+        "ai": "^5.0.59",
         "better-auth": "^1.2.12",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",

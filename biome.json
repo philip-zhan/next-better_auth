@@ -16,7 +16,7 @@
     },
     "formatter": {
         "indentStyle": "space",
-        "indentWidth": 4
+        "indentWidth": 2
     },
     "linter": {
         "rules": {
