@@ -95,9 +95,9 @@ export const ChatBot = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6 relative size-full h-screen">
+    <div className="max-w-4xl mx-auto p-6 relative w-full h-[calc(100vh-8rem)]">
       <div className="flex flex-col h-full">
-        <Conversation className="h-full">
+        <Conversation className="flex-1 overflow-auto">
           <ConversationContent>
             {messages.map((message) => (
               <div key={message.id}>
@@ -184,7 +184,7 @@ export const ChatBot = () => {
 
         <PromptInput
           onSubmit={handleSubmit}
-          className="mt-4"
+          className="mt-4 flex-shrink-0"
           globalDrop
           multiple
         >
