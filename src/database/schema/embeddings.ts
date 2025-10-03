@@ -10,7 +10,7 @@ export const embeddings = pgTable(
       onDelete: "cascade",
     }),
     content: text("content").notNull(),
-    embedding: vector("embedding", { dimensions: 1536 }).notNull(),
+    embedding: vector("embedding", { dimensions: 1536 }),
     ...timestamps,
   },
   (table) => [index().using("hnsw", table.embedding.op("vector_cosine_ops"))]

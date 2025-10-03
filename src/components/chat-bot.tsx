@@ -48,10 +48,6 @@ import { Fragment } from "react";
 
 const models = [
   {
-    name: "GPT 4.1 mini",
-    value: "openai/gpt-4.1-mini",
-  },
-  {
     name: "GPT 5 mini",
     value: "openai/gpt-5-mini",
   },
