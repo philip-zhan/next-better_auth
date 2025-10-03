@@ -26,6 +26,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { site } from "@/config/site";
+import { OrganizationSwitcher } from "@daveyplate/better-auth-ui";
 
 const data = {
   navMain: [
@@ -132,6 +133,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         ))}
       </SidebarContent>
       <SidebarFooter>
+        <OrganizationSwitcher />
         <NavUser />
       </SidebarFooter>
     </Sidebar>

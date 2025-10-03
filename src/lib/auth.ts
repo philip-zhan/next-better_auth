@@ -100,10 +100,20 @@ export const auth = betterAuth({
         onSubscriptionComplete: async ({ event }) => {
           const eventDataObject = event.data.object as Stripe.Checkout.Session;
           const userId = eventDataObject.metadata?.userId;
+          console.log("Subscription completed for user:", userId);
         },
       },
     }),
   ],
+  databaseHooks: {
+    user: {
+      create: {
+        after: async (user) => {
+          console.log("User created:", user);
+        },
+      },
+    },
+  },
 });
 
 export async function getActiveSubscription() {
