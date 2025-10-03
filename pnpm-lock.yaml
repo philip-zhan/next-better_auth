@@ -146,6 +146,9 @@ importers:
       resend:
         specifier: ^4.7.0
         version: 4.8.0(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      shiki:
+        specifier: ^3.13.0
+        version: 3.13.0
       sonner:
         specifier: ^2.0.5
         version: 2.0.7(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
