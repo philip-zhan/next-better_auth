@@ -10,7 +10,7 @@ import { db } from "@/database/db";
 import * as schema from "@/database/schema/auth-schema";
 import { type Plan, plans } from "@/lib/payments/plans";
 import { site } from "@/config/site";
-import { admin, apiKey } from "better-auth/plugins";
+import { admin, apiKey, organization } from "better-auth/plugins";
 
 const stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-08-27.basil",
@@ -70,6 +70,7 @@ export const auth = betterAuth({
   plugins: [
     admin(),
     apiKey(),
+    organization(),
     stripe({
       stripeClient,
       stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET!,

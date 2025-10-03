@@ -17,6 +17,11 @@ const queryClient = new QueryClient();
 export function Providers({ children }: { children: ReactNode }) {
   const router = useRouter();
   const { startUpload } = useUploadThing("avatarUploader");
+  const avatarUploader = async (file: File) => {
+    const uploadRes = await startUpload([file]);
+    if (!uploadRes?.[0]) throw new Error("Upload failed");
+    return uploadRes[0].ufsUrl;
+  };
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -30,22 +35,25 @@ export function Providers({ children }: { children: ReactNode }) {
           authClient={authClient}
           navigate={router.push}
           replace={router.replace}
-          apiKey={true}
+          apiKey={{
+            prefix: "ngk_",
+          }}
           onSessionChange={() => {
             router.refresh();
           }}
           settings={{
             url: "/dashboard/settings",
           }}
+          organization={{
+            logo: {
+              upload: avatarUploader,
+            }
+          }}
           social={{
             providers: ["github"],
           }}
           avatar={{
-            upload: async (file: File) => {
-              const uploadRes = await startUpload([file]);
-              if (!uploadRes?.[0]) throw new Error("Upload failed");
-              return uploadRes[0].ufsUrl;
-            },
+            upload: avatarUploader,
           }}
           Link={Link}
         >
