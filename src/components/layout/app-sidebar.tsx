@@ -39,8 +39,8 @@ const data = {
           icon: RiLineChartLine,
         },
         {
-          title: "Integrations",
-          url: "/dashboard/integrations",
+          title: "Knowledge Base",
+          url: "/dashboard/knowledge-base",
           icon: RiToolsFill,
         },
         {
