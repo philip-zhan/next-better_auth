@@ -1,6 +1,6 @@
 import { db } from "@/database/db";
 import { resources } from "@/database/schema/resources";
-import { auth } from "@/lib/auth";
+import { auth, getOrganizationId } from "@/lib/auth";
 import { headers } from "next/headers";
 import { eq, desc } from "drizzle-orm";
 import {
@@ -25,12 +25,7 @@ async function getResources(organizationId: string) {
 }
 
 export async function KnowledgeBaseList() {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-
-  const organizationId = session?.session?.activeOrganizationId;
-
+  const organizationId = await getOrganizationId();
   const resourcesList = organizationId
     ? await getResources(organizationId)
     : [];

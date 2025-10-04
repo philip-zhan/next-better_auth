@@ -125,10 +125,27 @@ export async function getActiveSubscription() {
 }
 
 export async function getOrganizationId() {
-  const session = await auth.api.getSession({ headers: await headers() });
+  const session = await getSession();
   const organizationId = session?.session?.activeOrganizationId;
   if (!organizationId) {
     throw new Error("No organization ID found");
   }
   return organizationId;
+}
+
+export async function getSession() {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) {
+    throw new Error("No session found");
+  }
+  return session;
+}
+
+export async function getUserId() {
+  const session = await getSession();
+  const userId = session?.session?.userId;
+  if (!userId) {
+    throw new Error("No user ID found");
+  }
+  return userId;
 }

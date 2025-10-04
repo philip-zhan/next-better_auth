@@ -1,7 +1,7 @@
 "use server";
 
 //Docs: https://www.better-auth.com/docs/plugins/stripe
-import { auth } from "@/lib/auth";
+import { auth, getSession } from "@/lib/auth";
 import type { Subscription } from "@better-auth/stripe";
 import { headers } from "next/headers";
 import Stripe from "stripe";
@@ -13,7 +13,7 @@ export async function getActiveSubscription(): Promise<{
   message?: string;
   subscription: Subscription | null;
 }> {
-  const session = await auth.api.getSession({ headers: await headers() });
+  const session = await getSession();
   if (!session) {
     return {
       status: false,
@@ -50,7 +50,7 @@ export async function updateExistingSubscription(
   subId: string,
   switchToPriceId: string
 ): Promise<{ status: boolean; message: string }> {
-  const session = await auth.api.getSession({ headers: await headers() });
+  const session = await getSession();
   if (!session) {
     return {
       status: false,
