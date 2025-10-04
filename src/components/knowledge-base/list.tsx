@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DeleteResourceButton } from "./delete-button";
+import { EditResourceDialog } from "./edit-dialog";
 
 async function getResources(organizationId: string) {
   const resourcesList = await db
@@ -74,10 +75,14 @@ export async function KnowledgeBaseList() {
                         {resource.content}
                       </p>
                     </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <Badge variant="secondary">ID: {resource.id}</Badge>
-                      <DeleteResourceButton resourceId={resource.id} />
-                    </div>
+                     <div className="flex items-center gap-2 shrink-0">
+                       <Badge variant="secondary">ID: {resource.id}</Badge>
+                       <EditResourceDialog 
+                         resourceId={resource.id} 
+                         currentContent={resource.content} 
+                       />
+                       <DeleteResourceButton resourceId={resource.id} />
+                     </div>
                   </div>
                 </CardContent>
               </Card>
