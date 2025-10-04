@@ -14,8 +14,10 @@ import { Label } from "@/components/ui/label";
 import { createResource } from "@/actions/resources";
 import { useState } from "react";
 import { authClient } from "@/lib/auth-client";
+import { useRouter } from "next/navigation";
 
 export function KnowledgeBaseCreateForm() {
+  const router = useRouter();
   const { data: session } = authClient.useSession();
   const [content, setContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -50,6 +52,7 @@ export function KnowledgeBaseCreateForm() {
       setMessage(result);
       if (result.includes("successfully")) {
         setContent("");
+        router.refresh(); // Refresh the page to show the new resource
       }
     } catch {
       setMessage("An error occurred. Please try again.");
