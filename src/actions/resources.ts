@@ -1,21 +1,26 @@
 "use server";
 
 import {
-  type NewResourceParams,
-  insertResourceSchema,
+  type ResourceInsertType,
+  resourceInsertSchema,
   resources,
 } from "@/database/schema/resources";
 import { db } from "@/database/db";
 import { generateEmbeddings } from "@/lib/embedding";
 import { embeddings as embeddingsTable } from "@/database/schema/embeddings";
 
-export const createResource = async (input: NewResourceParams) => {
+export const createResource = async (input: ResourceInsertType) => {
   try {
-    const { content } = insertResourceSchema.parse(input);
+    const { content, organizationId, userId } =
+      resourceInsertSchema.parse(input);
 
     const [resource] = await db
       .insert(resources)
-      .values({ content: content })
+      .values({
+        content: content,
+        organizationId: organizationId,
+        userId: userId,
+      })
       .returning();
 
     const embeddings = await generateEmbeddings(content);

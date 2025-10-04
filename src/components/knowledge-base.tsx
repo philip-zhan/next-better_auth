@@ -13,14 +13,26 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { createResource } from "@/actions/resources";
 import { useState } from "react";
+import { authClient } from "@/lib/auth-client";
 
 export function KnowledgeBase() {
+  const { data: session } = authClient.useSession();
   const [content, setContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!session) {
+      setMessage("You are not logged in.");
+      return;
+    }
+
+    if (!session.session.activeOrganizationId) {
+      setMessage("You are not part of an organization.");
+      return;
+    }
+
     if (!content.trim()) {
       setMessage("Please enter some content.");
       return;
@@ -30,7 +42,11 @@ export function KnowledgeBase() {
     setMessage("");
 
     try {
-      const result = await createResource({ content: content.trim() });
+      const result = await createResource({
+        content: content.trim(),
+        organizationId: session.session.activeOrganizationId,
+        userId: session.session.userId,
+      });
       setMessage(result);
       if (result.includes("successfully")) {
         setContent("");
