@@ -36,6 +36,13 @@
       "when": 1759549916941,
       "tag": "0004_thin_golden_guardian",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1759604231557,
+      "tag": "0005_clever_shard",
+      "breakpoints": true
     }
   ]
 }
