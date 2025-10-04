@@ -1,0 +1,1 @@
+ALTER TABLE "resources" ADD COLUMN "deleted_at" timestamp;

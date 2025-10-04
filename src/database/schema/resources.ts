@@ -1,4 +1,4 @@
-import { text, pgTable, integer } from "drizzle-orm/pg-core";
+import { text, pgTable, integer, timestamp } from "drizzle-orm/pg-core";
 import { timestamps } from "./_timestamps";
 import { createSelectSchema } from "drizzle-zod";
 import type { z } from "zod";
@@ -12,6 +12,7 @@ export const resources = pgTable("resources", {
   organizationId: text("organization_id").references(() => organizations.id),
   userId: text("user_id").references(() => users.id),
   ...timestamps,
+  deletedAt: timestamp("deleted_at"),
 });
 
 export const resourcesRelations = relations(resources, ({ one, many }) => ({
