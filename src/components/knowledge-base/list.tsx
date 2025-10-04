@@ -1,7 +1,7 @@
 import { db } from "@/database/db";
 import { resources } from "@/database/schema/resources";
 import { getOrganizationId } from "@/lib/auth";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and, isNull } from "drizzle-orm";
 import {
   Card,
   CardContent,
@@ -12,12 +12,18 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/layout/page-header";
 import { KnowledgeBaseCreateForm } from "./create";
+import { DeleteResourceButton } from "./delete-button";
 
 async function getResources(organizationId: string) {
   const resourcesList = await db
     .select()
     .from(resources)
-    .where(eq(resources.organizationId, organizationId))
+    .where(
+      and(
+        eq(resources.organizationId, organizationId),
+        isNull(resources.deletedAt)
+      )
+    )
     .orderBy(desc(resources.createdAt));
 
   return resourcesList;
@@ -78,9 +84,12 @@ export async function KnowledgeBaseList() {
                           {resource.content}
                         </p>
                       </div>
-                      <Badge variant="secondary" className="shrink-0">
-                        ID: {resource.id}
-                      </Badge>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Badge variant="secondary">
+                          ID: {resource.id}
+                        </Badge>
+                        <DeleteResourceButton resourceId={resource.id} />
+                      </div>
                     </div>
                   </CardContent>
                 </Card>

@@ -31,6 +31,7 @@ export const resourceInsertSchema = createSelectSchema(resources).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
+  deletedAt: true,
 });
 
 export type ResourceInsertType = z.infer<typeof resourceInsertSchema>;

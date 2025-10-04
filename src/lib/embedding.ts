@@ -1,7 +1,7 @@
 import { embed, embedMany } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { db } from "@/database/db";
-import { cosineDistance, asc, lt, sql, eq, and } from "drizzle-orm";
+import { cosineDistance, asc, lt, sql, eq, and, isNull } from "drizzle-orm";
 import { embeddings } from "@/database/schema/embeddings";
 import { resources } from "@/database/schema/resources";
 import { getOrganizationId } from "./auth";
@@ -48,7 +48,11 @@ export const findRelevantContent = async (userQuery: string) => {
     .from(embeddings)
     .innerJoin(resources, eq(embeddings.resourceId, resources.id))
     .where(
-      and(eq(resources.organizationId, organizationId), lt(similarity, 0.5))
+      and(
+        eq(resources.organizationId, organizationId),
+        lt(similarity, 0.5),
+        isNull(resources.deletedAt)
+      )
     )
     .orderBy((t) => asc(t.similarity))
     .limit(4);
