@@ -1,7 +1,6 @@
 import { db } from "@/database/db";
 import { resources } from "@/database/schema/resources";
-import { auth, getOrganizationId } from "@/lib/auth";
-import { headers } from "next/headers";
+import { getOrganizationId } from "@/lib/auth";
 import { eq, desc } from "drizzle-orm";
 import {
   Card,
