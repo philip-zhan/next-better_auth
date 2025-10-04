@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { KnowledgeBase } from "@/components/knowledge-base";
+import { KnowledgeBaseCreateForm } from "@/components/knowledge-base-create";
 
 export const metadata: Metadata = {
   title: "Knowledge Base",
@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 export default function KnowledgeBasePage() {
   return (
     <div>
-      <KnowledgeBase />
+      <KnowledgeBaseCreateForm />
     </div>
   );
 }

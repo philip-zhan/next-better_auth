@@ -15,7 +15,7 @@ import { createResource } from "@/actions/resources";
 import { useState } from "react";
 import { authClient } from "@/lib/auth-client";
 
-export function KnowledgeBase() {
+export function KnowledgeBaseCreateForm() {
   const { data: session } = authClient.useSession();
   const [content, setContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
