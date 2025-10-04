@@ -123,3 +123,12 @@ export async function getActiveSubscription() {
   });
   return subscriptions.find((s) => s.status === "active");
 }
+
+export async function getOrganizationId() {
+  const session = await auth.api.getSession({ headers: await headers() });
+  const organizationId = session?.session?.activeOrganizationId;
+  if (!organizationId) {
+    throw new Error("No organization ID found");
+  }
+  return organizationId;
+}

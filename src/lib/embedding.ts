@@ -1,8 +1,10 @@
 import { embed, embedMany } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { db } from "@/database/db";
-import { cosineDistance, asc, lt, sql } from "drizzle-orm";
+import { cosineDistance, asc, lt, sql, eq, and } from "drizzle-orm";
 import { embeddings } from "@/database/schema/embeddings";
+import { resources } from "@/database/schema/resources";
+import { getOrganizationId } from "./auth";
 
 const embeddingModel = openai.embedding("text-embedding-ada-002");
 
@@ -35,16 +37,20 @@ export const generateEmbedding = async (value: string): Promise<number[]> => {
 
 export const findRelevantContent = async (userQuery: string) => {
   console.log("findRelevantContent:", userQuery);
+  const organizationId = await getOrganizationId();
   const userQueryEmbedded = await generateEmbedding(userQuery);
   const similarity = sql<number>`${cosineDistance(
     embeddings.embedding,
     userQueryEmbedded
   )}`;
-  const similarGuides = await db
-    .select({ name: embeddings.content, similarity })
+  const similarContents = await db
+    .select({ content: resources.content, similarity })
     .from(embeddings)
-    .where(lt(similarity, 0.5))
+    .innerJoin(resources, eq(embeddings.resourceId, resources.id))
+    .where(
+      and(eq(resources.organizationId, organizationId), lt(similarity, 0.5))
+    )
     .orderBy((t) => asc(t.similarity))
     .limit(4);
-  return similarGuides;
+  return similarContents;
 };
