@@ -4,6 +4,7 @@ import {
   DeleteAccountCard,
   ApiKeysCard,
 } from "@daveyplate/better-auth-ui";
+import { SignOutCard } from "@/components/sign-out-card";
 import type { Metadata } from "next";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -22,6 +23,7 @@ export default function SettingsPage() {
         </TabsList>
         <TabsContent value="account" className="space-y-4">
           <AccountSettingsCards />
+          <SignOutCard />
           <DeleteAccountCard />
         </TabsContent>
         <TabsContent value="security">
