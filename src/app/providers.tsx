@@ -43,6 +43,12 @@ export function Providers({ children }: { children: ReactNode }) {
           }}
           account={{
             basePath: "/dashboard/account",
+            viewPaths: {
+              SETTINGS: "#settings",
+              SECURITY: "#security",
+              API_KEYS: "#api-keys",
+              ORGANIZATIONS: "#organizations",
+            },
           }}
           organization={{
             logo: {
