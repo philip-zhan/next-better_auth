@@ -55,6 +55,11 @@ export function Providers({ children }: { children: ReactNode }) {
               upload: avatarUploader,
             },
             basePath: "/dashboard/organization",
+            viewPaths: {
+              SETTINGS: "#settings",
+              MEMBERS: "#members",
+              API_KEYS: "#api-keys",
+            },
           }}
           social={{
             providers: ["github"],
