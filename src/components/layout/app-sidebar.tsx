@@ -3,7 +3,6 @@
 import {
   RiLineChartLine,
   RiToolsFill,
-  RiSettingsLine,
   RiSpeedUpLine,
   RiBankCardLine,
 } from "@remixicon/react";
@@ -41,11 +40,6 @@ const data = {
           title: "Knowledge Base",
           url: "/dashboard/knowledge-base",
           icon: RiToolsFill,
-        },
-        {
-          title: "Settings",
-          url: "/dashboard/settings",
-          icon: RiSettingsLine,
         },
         {
           title: "Billing",
