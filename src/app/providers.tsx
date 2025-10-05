@@ -42,13 +42,13 @@ export function Providers({ children }: { children: ReactNode }) {
             router.refresh();
           }}
           settings={{
-            // url: "/dashboard/settings",
-            basePath: "/dashboard",
+            url: "/dashboard/settings",
+            // basePath: "/dashboard",
           }}
           organization={{
             logo: {
               upload: avatarUploader,
-            }
+            },
           }}
           social={{
             providers: ["github"],
