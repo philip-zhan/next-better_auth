@@ -42,6 +42,7 @@ export function Providers({ children }: { children: ReactNode }) {
             router.refresh();
           }}
           settings={{
+            // url: "/dashboard/settings",
             basePath: "/dashboard",
           }}
           organization={{
