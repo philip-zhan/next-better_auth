@@ -1,4 +1,4 @@
-import { AuthCard, AuthLoading } from "@daveyplate/better-auth-ui";
+import { AuthView, AuthLoading } from "@daveyplate/better-auth-ui";
 import { authViewPaths } from "@daveyplate/better-auth-ui/server";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
@@ -38,7 +38,7 @@ export default async function AuthPage({
         <WelcomeToast />
       </AuthLoading>
 
-      <AuthCard pathname={pathname} />
+      <AuthView pathname={pathname} />
 
       {["sign-up"].includes(pathname) && (
         <div className="text-center text-muted-foreground text-sm">

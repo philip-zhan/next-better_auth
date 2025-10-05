@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  RiCodeSSlashLine,
   RiLineChartLine,
   RiToolsFill,
   RiSettingsLine,
@@ -53,7 +52,6 @@ const data = {
           url: "/dashboard/billing",
           icon: RiBankCardLine,
         },
-        { title: "API", url: "/dashboard/api", icon: RiCodeSSlashLine },
       ],
     },
   ],
