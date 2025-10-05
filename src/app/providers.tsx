@@ -62,7 +62,7 @@ export function Providers({ children }: { children: ReactNode }) {
             },
           }}
           social={{
-            providers: ["github"],
+            providers: ["github", "google"],
           }}
           avatar={{
             upload: avatarUploader,

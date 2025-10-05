@@ -2,10 +2,17 @@
 
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { RiLogoutCircleLine } from "@remixicon/react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 interface SignOutCardProps {
   className?: string;
@@ -13,7 +20,7 @@ interface SignOutCardProps {
 
 export function SignOutCard({ className }: SignOutCardProps) {
   const [isPending, setIsPending] = useState(false);
-
+  const router = useRouter();
   const handleSignOut = async () => {
     try {
       setIsPending(true);
@@ -36,6 +43,7 @@ export function SignOutCard({ className }: SignOutCardProps) {
       toast.error("Failed to sign out");
     } finally {
       setIsPending(false);
+      router.push("/");
     }
   };
 
@@ -47,7 +55,8 @@ export function SignOutCard({ className }: SignOutCardProps) {
           Sign Out
         </CardTitle>
         <CardDescription>
-          Sign out of your account. You'll need to sign in again to access your dashboard.
+          Sign out of your account. You'll need to sign in again to access your
+          dashboard.
         </CardDescription>
       </CardHeader>
       <CardContent>
