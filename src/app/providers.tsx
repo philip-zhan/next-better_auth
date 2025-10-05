@@ -41,14 +41,14 @@ export function Providers({ children }: { children: ReactNode }) {
           onSessionChange={() => {
             router.refresh();
           }}
-          settings={{
-            url: "/dashboard/settings",
-            // basePath: "/dashboard",
+          account={{
+            basePath: "/dashboard/account",
           }}
           organization={{
             logo: {
               upload: avatarUploader,
             },
+            basePath: "/dashboard/organization",
           }}
           social={{
             providers: ["github"],
