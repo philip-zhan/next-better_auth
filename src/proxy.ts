@@ -1,4 +1,3 @@
-import { getSessionCookie } from "better-auth/cookies";
 import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
@@ -12,26 +11,9 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // Protected routes - all dashboard routes and auth settings
-  matcher: [
-    "/dashboard/:path*",
-    "/auth/settings",
-    {
-      source:
-        "/((?!_next/static|_next/image|favicon.ico|.well-known/workflow/|api/workflow).*)",
-    },
-  ],
+  // Protected routes - only dashboard routes
+  matcher: ["/dashboard/:path*"],
 };
-
-function checkSessionCookie(request: NextRequest) {
-  // Check cookie for optimistic redirects for protected routes
-  // Use getSession in your RSC to protect a route via SSR or useAuthenticate client side
-  const sessionCookie = getSessionCookie(request);
-
-  if (!sessionCookie) {
-    return redirectToLogin(request);
-  }
-}
 
 function redirectToLogin(request: NextRequest) {
   const redirectTo = request.nextUrl.pathname + request.nextUrl.search;
