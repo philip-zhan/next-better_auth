@@ -3,7 +3,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) {
     return redirectToLogin(request);
@@ -12,9 +12,8 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  runtime: "nodejs",
   // Protected routes - all dashboard routes and auth settings
-  matcher: ["/dashboard/:path*", "/auth/settings"],
+  matcher: ["/dashboard/:path*", "/auth/settings"]
 };
 
 function checkSessionCookie(request: NextRequest) {

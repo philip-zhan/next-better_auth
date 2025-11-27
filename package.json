@@ -53,14 +53,14 @@
         "framer-motion": "^12.19.2",
         "lucide-react": "^0.518.0",
         "nanoid": "^5.1.6",
-        "next": "^15.5.4",
+        "next": "16.0.5",
         "next-themes": "0.4.6",
         "nextjs-toploader": "^3.8.16",
         "pg": "^8.16.2",
         "prettier": "^3.6.2",
-        "react": "^19.1.0",
+        "react": "19.2.0",
         "react-day-picker": "^9.7.0",
-        "react-dom": "^19.1.0",
+        "react-dom": "19.2.0",
         "react-hook-form": "^7.60.0",
         "react-syntax-highlighter": "^15.6.6",
         "resend": "^4.7.0",
@@ -81,8 +81,8 @@
         "@tanstack/react-query-devtools": "^5.90.2",
         "@types/node": "^24.0.3",
         "@types/pg": "^8.15.4",
-        "@types/react": "^19.1.8",
-        "@types/react-dom": "^19.1.6",
+        "@types/react": "19.2.7",
+        "@types/react-dom": "19.2.3",
         "@types/react-syntax-highlighter": "^15.5.13",
         "dotenv": "^16.5.0",
         "drizzle-kit": "^0.31.5",
@@ -94,7 +94,10 @@
         "typescript": "^5.8.3"
     },
     "pnpm": {
-        "overrides": {}
+        "overrides": {
+            "@types/react": "19.2.7",
+            "@types/react-dom": "19.2.3"
+        }
     },
-    "packageManager": "pnpm@10.17.1"
+    "packageManager": "pnpm@10.23.0+sha512.21c4e5698002ade97e4efe8b8b4a89a8de3c85a37919f957e7a0f30f38fbc5bbdd05980ffe29179b2fb6e6e691242e098d945d1601772cad0fef5fb6411e2a4b"
 }
