@@ -13,7 +13,14 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   // Protected routes - all dashboard routes and auth settings
-  matcher: ["/dashboard/:path*", "/auth/settings"]
+  matcher: [
+    "/dashboard/:path*",
+    "/auth/settings",
+    {
+      source:
+        "/((?!_next/static|_next/image|favicon.ico|.well-known/workflow/|api/workflow).*)",
+    },
+  ],
 };
 
 function checkSessionCookie(request: NextRequest) {
