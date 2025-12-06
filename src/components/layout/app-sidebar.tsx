@@ -33,7 +33,7 @@ const data = {
         { title: "Dashboard", url: "/dashboard", icon: RiSpeedUpLine },
         {
           title: "Chat",
-          url: "/dashboard/chat",
+          url: "/chat",
           icon: RiLineChartLine,
         },
         {

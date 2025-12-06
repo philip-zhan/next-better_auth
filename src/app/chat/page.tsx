@@ -38,6 +38,7 @@ import {
   CopyIcon,
   MessageSquareIcon,
 } from "lucide-react";
+import { UserButton } from "@daveyplate/better-auth-ui";
 import {
   Source,
   Sources,
@@ -96,8 +97,9 @@ export default function ChatPage() {
     <div className="flex h-screen w-full flex-col bg-background">
       {/* Header */}
       <header className="shrink-0 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-14 items-center px-4">
+        <div className="container flex h-14 items-center justify-between px-4">
           <h1 className="text-xl font-semibold">Chat with AI</h1>
+          <UserButton size="icon" />
         </div>
       </header>
 
