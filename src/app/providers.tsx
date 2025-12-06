@@ -10,7 +10,7 @@ import { Toaster } from "sonner";
 import { authClient } from "@/lib/auth-client";
 import { useUploadThing } from "@/lib/uploadthing";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+// import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
 const queryClient = new QueryClient();
 
@@ -74,7 +74,7 @@ export function Providers({ children }: { children: ReactNode }) {
           <Toaster />
         </AuthUIProvider>
       </ThemeProvider>
-      <ReactQueryDevtools initialIsOpen={false} />
+      {/* <ReactQueryDevtools initialIsOpen={false} /> */}
     </QueryClientProvider>
   );
 }
