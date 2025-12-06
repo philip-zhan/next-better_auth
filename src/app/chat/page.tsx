@@ -9,7 +9,6 @@ import {
 import {
   Message,
   MessageContent,
-  MessageAvatar,
 } from "@/components/ai-elements/message";
 import {
   PromptInput,
@@ -58,16 +57,12 @@ import { Fragment } from "react";
 
 const models = [
   {
-    name: "GPT-4 Turbo",
-    value: "gpt-4-turbo",
+    name: "GPT 5.1 Thinking",
+    value: "openai/gpt-5.1-thinking",
   },
   {
-    name: "GPT-4",
-    value: "gpt-4",
-  },
-  {
-    name: "GPT-3.5 Turbo",
-    value: "gpt-3.5-turbo",
+    name: "GPT 5.1 Instant",
+    value: "openai/gpt-5.1-instant",
   },
 ];
 
@@ -156,16 +151,6 @@ export default function ChatPage() {
                             return (
                               <Fragment key={`${message.id}-text-${partIndex}`}>
                                 <Message from={message.role}>
-                                  <MessageAvatar
-                                    src={
-                                      message.role === "user"
-                                        ? "https://api.dicebear.com/7.x/avataaars/svg?seed=user"
-                                        : "https://api.dicebear.com/7.x/bottts/svg?seed=assistant"
-                                    }
-                                    name={
-                                      message.role === "user" ? "You" : "AI"
-                                    }
-                                  />
                                   <MessageContent variant="flat">
                                     <Response>{part.text}</Response>
                                   </MessageContent>
@@ -228,10 +213,6 @@ export default function ChatPage() {
                   {/* Loading indicator */}
                   {status === "submitted" && (
                     <div className="flex items-center gap-2 py-4">
-                      <MessageAvatar
-                        src="https://api.dicebear.com/7.x/bottts/svg?seed=assistant"
-                        name="AI"
-                      />
                       <Loader />
                     </div>
                   )}

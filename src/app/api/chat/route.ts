@@ -23,12 +23,12 @@ export async function POST(req: Request) {
   } = await req.json();
 
   const result = streamText({
-    model: webSearch ? "perplexity/sonar" : model,
+    model: model,
     messages: convertToModelMessages(messages),
-    stopWhen: stepCountIs(5),
-    system: `You are a helpful assistant. Check your knowledge base before answering any questions.
-    Only respond to questions using information from tool calls.
-    if no relevant information is found in the tool calls, respond, "Sorry, I don't know."`,
+    stopWhen: stepCountIs(10),
+    // system: `You are a helpful assistant. Check your knowledge base before answering any questions.
+    // Only respond to questions using information from tool calls.
+    // if no relevant information is found in the tool calls, respond, "Sorry, I don't know."`,
     tools: {
       getInformation: tool({
         description: `get information from your knowledge base to answer questions.`,
