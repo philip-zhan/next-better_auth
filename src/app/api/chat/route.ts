@@ -5,7 +5,10 @@ import {
   stepCountIs,
   tool,
 } from "ai";
-import { findRelevantContent, generateEmbeddings } from "@/lib/embedding";
+import {
+  findEnhancedRelevantContent,
+  generateEmbeddings,
+} from "@/lib/embedding";
 import { z } from "zod";
 import { db } from "@/database/db";
 import { conversations } from "@/database/schema/conversations";
@@ -109,9 +112,7 @@ export async function POST(req: Request) {
     session.session.activeOrganizationId || DEFAULT_ORGANIZATION_ID;
 
   // Get the latest user message
-  const latestUserMessage = chatMessages
-    .filter((m) => m.role === "user")
-    .pop();
+  const latestUserMessage = chatMessages.filter((m) => m.role === "user").pop();
   const userContent =
     latestUserMessage?.parts?.find((p) => p.type === "text")?.text || "";
 
@@ -145,7 +146,8 @@ export async function POST(req: Request) {
         inputSchema: z.object({
           question: z.string().describe("the users question"),
         }),
-        execute: async ({ question }) => findRelevantContent(question),
+        execute: async ({ question }) =>
+          await findEnhancedRelevantContent(question),
       }),
     },
     onFinish: async ({ text }) => {

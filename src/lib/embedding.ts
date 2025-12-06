@@ -41,7 +41,10 @@ export const generateEmbedding = async (value: string): Promise<number[]> => {
 };
 
 // Original function for resource-based knowledge base search
-export const findRelevantContent = async (userQuery: string) => {
+export const findRelevantContent = async (
+  userQuery: string,
+  similarityThreshold = 0.5
+) => {
   console.log("findRelevantContent:", userQuery);
   const organizationId = await getOrganizationId();
   const userQueryEmbedded = await generateEmbedding(userQuery);
@@ -56,7 +59,7 @@ export const findRelevantContent = async (userQuery: string) => {
     .where(
       and(
         eq(resources.organizationId, organizationId),
-        lt(similarity, 0.5),
+        lt(similarity, similarityThreshold),
         isNull(resources.deletedAt)
       )
     )
@@ -83,7 +86,8 @@ export type EnhancedSearchResult = {
 export const findUserOwnEmbeddings = async (
   userQuery: string,
   userId: string,
-  limit = 4
+  limit = 4,
+  similarityThreshold = 0.5
 ): Promise<EnhancedSearchResult[]> => {
   const userQueryEmbedded = await generateEmbedding(userQuery);
   const similarity = sql<number>`${cosineDistance(
@@ -106,7 +110,7 @@ export const findUserOwnEmbeddings = async (
     .innerJoin(messages, eq(messageEmbeddings.messageId, messages.id))
     .innerJoin(conversations, eq(messages.conversationId, conversations.id))
     .innerJoin(users, eq(conversations.userId, users.id))
-    .where(and(eq(conversations.userId, userId), lt(similarity, 0.5)))
+    .where(and(eq(conversations.userId, userId), lt(similarity, similarityThreshold)))
     .orderBy(asc(similarity))
     .limit(limit);
 
@@ -121,7 +125,8 @@ export const findUserOwnEmbeddings = async (
 export const findSharedEmbeddings = async (
   userQuery: string,
   userId: string,
-  limit = 4
+  limit = 4,
+  similarityThreshold = 0.5
 ): Promise<EnhancedSearchResult[]> => {
   const userQueryEmbedded = await generateEmbedding(userQuery);
   const similarity = sql<number>`${cosineDistance(
@@ -148,7 +153,7 @@ export const findSharedEmbeddings = async (
     .innerJoin(messages, eq(messageEmbeddings.messageId, messages.id))
     .innerJoin(users, eq(knowledgeShares.ownerId, users.id))
     .where(
-      and(eq(knowledgeShares.sharedWithUserId, userId), lt(similarity, 0.5))
+      and(eq(knowledgeShares.sharedWithUserId, userId), lt(similarity, similarityThreshold))
     )
     .orderBy(asc(similarity))
     .limit(limit);
@@ -166,7 +171,8 @@ export const findOrgMembersEmbeddings = async (
   userId: string,
   organizationId: string,
   excludeEmbeddingIds: number[],
-  limit = 4
+  limit = 4,
+  similarityThreshold = 0.5
 ): Promise<EnhancedSearchResult[]> => {
   const userQueryEmbedded = await generateEmbedding(userQuery);
   const similarity = sql<number>`${cosineDistance(
@@ -221,7 +227,7 @@ export const findOrgMembersEmbeddings = async (
           memberIds.map((id) => sql`${id}`),
           sql`, `
         )})`,
-        lt(similarity, 0.5),
+        lt(similarity, similarityThreshold),
         excludeCondition
       )
     )
@@ -237,7 +243,8 @@ export const findOrgMembersEmbeddings = async (
 
 // Enhanced search that combines all phases
 export const findEnhancedRelevantContent = async (
-  userQuery: string
+  userQuery: string,
+  similarityThreshold = 0.5
 ): Promise<{
   ownResults: EnhancedSearchResult[];
   sharedResults: EnhancedSearchResult[];
@@ -250,10 +257,10 @@ export const findEnhancedRelevantContent = async (
   const organizationId = await getOrganizationId();
 
   // Phase 1: Search user's own embeddings
-  const ownResults = await findUserOwnEmbeddings(userQuery, userId);
+  const ownResults = await findUserOwnEmbeddings(userQuery, userId, 4, similarityThreshold);
 
   // Phase 2: Search shared embeddings
-  const sharedResults = await findSharedEmbeddings(userQuery, userId);
+  const sharedResults = await findSharedEmbeddings(userQuery, userId, 4, similarityThreshold);
 
   // Phase 3: Search other org members' embeddings
   const excludeIds = [
@@ -264,7 +271,9 @@ export const findEnhancedRelevantContent = async (
     userQuery,
     userId,
     organizationId,
-    excludeIds
+    excludeIds,
+    4,
+    similarityThreshold
   );
 
   return {
