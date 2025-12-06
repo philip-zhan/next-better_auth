@@ -10,13 +10,11 @@ import { conversations } from "@/database/schema/conversations";
 import { knowledgeShares } from "@/database/schema/knowledge-sharing";
 import { users, members } from "@/database/schema/auth-schema";
 
-const embeddingModel = openai.embedding("text-embedding-ada-002");
+const embeddingModel = openai.embedding("text-embedding-3-small");
 
 const generateChunks = (input: string): string[] => {
-  return input
-    .trim()
-    .split(".")
-    .filter((i) => i !== "");
+  // don't chunk for now
+  return [input];
 };
 
 export const generateEmbeddings = async (
