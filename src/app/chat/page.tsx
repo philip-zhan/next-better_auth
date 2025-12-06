@@ -6,10 +6,7 @@ import {
   ConversationEmptyState,
   ConversationScrollButton,
 } from "@/components/ai-elements/conversation";
-import {
-  Message,
-  MessageContent,
-} from "@/components/ai-elements/message";
+import { Message, MessageContent } from "@/components/ai-elements/message";
 import {
   PromptInput,
   PromptInputActionAddAttachments,
@@ -98,16 +95,16 @@ export default function ChatPage() {
   return (
     <div className="flex h-screen w-full flex-col bg-background">
       {/* Header */}
-      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header className="shrink-0 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-14 items-center px-4">
           <h1 className="text-xl font-semibold">Chat with AI</h1>
         </div>
       </header>
 
       {/* Main Content */}
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <div className="mx-auto w-full max-w-4xl flex-1 flex flex-col">
-          <Conversation className="flex-1">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div className="mx-auto flex h-full w-full max-w-4xl flex-col">
+          <Conversation className="min-h-0 flex-1">
             <ConversationContent>
               {messages.length === 0 ? (
                 <ConversationEmptyState
@@ -223,7 +220,7 @@ export default function ChatPage() {
           </Conversation>
 
           {/* Input Area */}
-          <div className="p-4">
+          <div className="shrink-0 p-4">
             <PromptInput
               onSubmit={handleSubmit}
               globalDrop
