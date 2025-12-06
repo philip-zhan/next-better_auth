@@ -10,7 +10,7 @@ import { z } from "zod";
 import { db } from "@/database/db";
 import { conversations } from "@/database/schema/conversations";
 import { messages, messageEmbeddings } from "@/database/schema/messages";
-import { getSession } from "@/lib/auth";
+import { getSession, DEFAULT_ORGANIZATION_ID } from "@/lib/auth";
 import { eq, and } from "drizzle-orm";
 
 // Allow streaming responses up to 30 seconds
@@ -94,19 +94,19 @@ export async function POST(req: Request) {
   const {
     messages: chatMessages,
     model,
-    webSearch,
     conversationId,
   }: {
     messages: UIMessage[];
     model: string;
-    webSearch: boolean;
     conversationId?: number;
   } = await req.json();
 
   // Get the current user session
   const session = await getSession();
   const userId = session.session.userId;
-  const organizationId = session.session.activeOrganizationId;
+  // For POC: use default organization if no active org is set
+  const organizationId =
+    session.session.activeOrganizationId || DEFAULT_ORGANIZATION_ID;
 
   // Get the latest user message
   const latestUserMessage = chatMessages
@@ -118,7 +118,7 @@ export async function POST(req: Request) {
   // Get or create conversation
   const activeConversationId = await getOrCreateConversation(
     userId,
-    organizationId ?? null,
+    organizationId,
     conversationId ?? null,
     userContent
   );

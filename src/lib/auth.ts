@@ -8,9 +8,59 @@ import { EmailTemplate } from "@daveyplate/better-auth-ui/server";
 import React from "react";
 import { db } from "@/database/db";
 import * as schema from "@/database/schema/auth-schema";
+import { organizations, members } from "@/database/schema/auth-schema";
 import { type Plan, plans } from "@/lib/payments/plans";
 import { site } from "@/config/site";
 import { admin, apiKey, organization } from "better-auth/plugins";
+import { eq } from "drizzle-orm";
+import { nanoid } from "nanoid";
+
+// Default organization for POC - all users will belong to this org
+export const DEFAULT_ORGANIZATION_ID = "default-org-poc";
+export const DEFAULT_ORGANIZATION_NAME = "Default Organization";
+export const DEFAULT_ORGANIZATION_SLUG = "default-org";
+
+// Ensure the default organization exists
+async function ensureDefaultOrganization() {
+  const existing = await db
+    .select()
+    .from(organizations)
+    .where(eq(organizations.id, DEFAULT_ORGANIZATION_ID))
+    .limit(1);
+
+  if (existing.length === 0) {
+    await db.insert(organizations).values({
+      id: DEFAULT_ORGANIZATION_ID,
+      name: DEFAULT_ORGANIZATION_NAME,
+      slug: DEFAULT_ORGANIZATION_SLUG,
+      createdAt: new Date(),
+    });
+    console.log("Default organization created");
+  }
+}
+
+// Add user to default organization
+async function addUserToDefaultOrganization(userId: string) {
+  await ensureDefaultOrganization();
+
+  // Check if user is already a member
+  const existingMembership = await db
+    .select()
+    .from(members)
+    .where(eq(members.userId, userId))
+    .limit(1);
+
+  if (existingMembership.length === 0) {
+    await db.insert(members).values({
+      id: nanoid(),
+      organizationId: DEFAULT_ORGANIZATION_ID,
+      userId,
+      role: "member",
+      createdAt: new Date(),
+    });
+    console.log("User added to default organization:", userId);
+  }
+}
 
 const stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-08-27.basil",
@@ -27,7 +77,7 @@ export const auth = betterAuth({
   }),
   emailAndPassword: {
     enabled: true,
-    sendResetPassword: async ({ user, url, token }, request) => {
+    sendResetPassword: async ({ user, url }) => {
       const name = user.name || user.email.split("@")[0];
 
       await resend.emails.send({
@@ -114,6 +164,8 @@ export const auth = betterAuth({
       create: {
         after: async (user) => {
           console.log("User created:", user);
+          // Automatically add user to default organization for POC
+          await addUserToDefaultOrganization(user.id);
         },
       },
     },
@@ -131,10 +183,8 @@ export async function getActiveSubscription() {
 export async function getOrganizationId() {
   const session = await getSession();
   const organizationId = session?.session?.activeOrganizationId;
-  if (!organizationId) {
-    throw new Error("No organization ID found");
-  }
-  return organizationId;
+  // For POC: return default organization if no active org is set
+  return organizationId || DEFAULT_ORGANIZATION_ID;
 }
 
 export async function getSession() {

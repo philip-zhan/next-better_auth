@@ -248,13 +248,8 @@ export const findEnhancedRelevantContent = async (
   console.log("findEnhancedRelevantContent:", userQuery);
 
   const userId = await getUserId();
-  let organizationId: string | null = null;
-
-  try {
-    organizationId = await getOrganizationId();
-  } catch {
-    // User might not be in an organization
-  }
+  // For POC: getOrganizationId always returns the default org if no active org
+  const organizationId = await getOrganizationId();
 
   // Phase 1: Search user's own embeddings
   const ownResults = await findUserOwnEmbeddings(userQuery, userId);
@@ -262,20 +257,17 @@ export const findEnhancedRelevantContent = async (
   // Phase 2: Search shared embeddings
   const sharedResults = await findSharedEmbeddings(userQuery, userId);
 
-  // Phase 3: Search other org members' embeddings (if in an organization)
-  let otherMembersResults: EnhancedSearchResult[] = [];
-  if (organizationId) {
-    const excludeIds = [
-      ...ownResults.map((r) => r.embeddingId),
-      ...sharedResults.map((r) => r.embeddingId),
-    ];
-    otherMembersResults = await findOrgMembersEmbeddings(
-      userQuery,
-      userId,
-      organizationId,
-      excludeIds
-    );
-  }
+  // Phase 3: Search other org members' embeddings
+  const excludeIds = [
+    ...ownResults.map((r) => r.embeddingId),
+    ...sharedResults.map((r) => r.embeddingId),
+  ];
+  const otherMembersResults = await findOrgMembersEmbeddings(
+    userQuery,
+    userId,
+    organizationId,
+    excludeIds
+  );
 
   return {
     ownResults,
