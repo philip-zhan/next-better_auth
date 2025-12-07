@@ -202,8 +202,16 @@ When searching for information using the getInformation tool:
             .describe("The original question that led to this request"),
         }),
         execute: async ({ embeddingId, ownerName, question }) => {
+          console.log("[requestKnowledge] Tool called with:", {
+            embeddingId,
+            ownerName,
+            question,
+            requesterId: userId,
+          });
+
           try {
             // Get the embedding and find the owner
+            console.log("[requestKnowledge] Looking up embedding:", embeddingId);
             const embeddingData = await db
               .select({
                 embeddingId: messageEmbeddings.id,
@@ -219,6 +227,7 @@ When searching for information using the getInformation tool:
               .limit(1);
 
             if (embeddingData.length === 0) {
+              console.log("[requestKnowledge] Embedding not found:", embeddingId);
               return {
                 success: false,
                 error: "Knowledge source not found",
@@ -226,9 +235,11 @@ When searching for information using the getInformation tool:
             }
 
             const ownerId = embeddingData[0].ownerId;
+            console.log("[requestKnowledge] Found embedding owner:", ownerId);
 
             // Can't request your own knowledge
             if (ownerId === userId) {
+              console.log("[requestKnowledge] User tried to request own knowledge");
               return {
                 success: false,
                 error: "This is your own knowledge",
@@ -236,6 +247,7 @@ When searching for information using the getInformation tool:
             }
 
             // Check if already shared
+            console.log("[requestKnowledge] Checking if already shared...");
             const existingShare = await db
               .select()
               .from(knowledgeShares)
@@ -248,6 +260,7 @@ When searching for information using the getInformation tool:
               .limit(1);
 
             if (existingShare.length > 0) {
+              console.log("[requestKnowledge] Knowledge already shared with user");
               return {
                 success: false,
                 error: "This knowledge is already shared with you",
@@ -255,6 +268,7 @@ When searching for information using the getInformation tool:
             }
 
             // Check if pending request already exists
+            console.log("[requestKnowledge] Checking for pending request...");
             const existingRequest = await db
               .select()
               .from(knowledgeRequests)
@@ -268,6 +282,7 @@ When searching for information using the getInformation tool:
               .limit(1);
 
             if (existingRequest.length > 0) {
+              console.log("[requestKnowledge] Pending request already exists");
               return {
                 success: false,
                 error: "You already have a pending request for this knowledge",
@@ -275,6 +290,7 @@ When searching for information using the getInformation tool:
             }
 
             // Create the knowledge request
+            console.log("[requestKnowledge] Creating new knowledge request...");
             const [newRequest] = await db
               .insert(knowledgeRequests)
               .values({
@@ -285,8 +301,10 @@ When searching for information using the getInformation tool:
                 status: "pending",
               })
               .returning();
+            console.log("[requestKnowledge] Created request:", newRequest.id);
 
             // Create notification for the owner
+            console.log("[requestKnowledge] Creating notification for owner...");
             const embeddingContent = await db
               .select({ content: messageEmbeddings.content })
               .from(messageEmbeddings)
@@ -304,6 +322,7 @@ When searching for information using the getInformation tool:
                 chunkContent: embeddingContent[0]?.content || "",
               },
             });
+            console.log("[requestKnowledge] Notification created");
 
             // Get requester info for Pusher event
             const [requesterInfo] = await db
@@ -313,6 +332,7 @@ When searching for information using the getInformation tool:
               .limit(1);
 
             // Trigger realtime notification via Pusher
+            console.log("[requestKnowledge] Triggering Pusher event for owner:", ownerId);
             await triggerKnowledgeRequest(ownerId, {
               requestId: newRequest.id,
               question,
@@ -320,14 +340,16 @@ When searching for information using the getInformation tool:
               requesterEmail: requesterInfo?.email || "",
               createdAt: new Date().toISOString(),
             });
+            console.log("[requestKnowledge] Pusher event triggered");
 
+            console.log("[requestKnowledge] Success! Request ID:", newRequest.id);
             return {
               success: true,
               message: `Knowledge request sent to ${ownerName}. They will be notified and can choose to share their knowledge with you.`,
               requestId: newRequest.id,
             };
           } catch (error) {
-            console.error("Error creating knowledge request:", error);
+            console.error("[requestKnowledge] Error:", error);
             return {
               success: false,
               error: "Failed to send knowledge request",
