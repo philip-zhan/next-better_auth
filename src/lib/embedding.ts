@@ -115,6 +115,15 @@ export const findUserOwnEmbeddings = async (
     .orderBy(asc(similarity))
     .limit(limit);
 
+  console.log(
+    "[findUserOwnEmbeddings] Found results:",
+    results.map((r) => ({
+      embeddingId: r.embeddingId,
+      ownerName: r.ownerName,
+      similarity: r.similarity,
+    }))
+  );
+
   return results.map((r) => ({
     ...r,
     isOwn: true,
@@ -161,6 +170,15 @@ export const findSharedEmbeddings = async (
     )
     .orderBy(asc(similarity))
     .limit(limit);
+
+  console.log(
+    "[findSharedEmbeddings] Found results:",
+    results.map((r) => ({
+      embeddingId: r.embeddingId,
+      ownerName: r.ownerName,
+      similarity: r.similarity,
+    }))
+  );
 
   return results.map((r) => ({
     ...r,
