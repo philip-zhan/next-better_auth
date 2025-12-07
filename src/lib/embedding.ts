@@ -98,11 +98,8 @@ export const findUserOwnEmbeddings = async (
     .select({
       embeddingId: messageEmbeddings.id,
       embeddingContent: messageEmbeddings.content,
-      parentMessageContent: messages.content,
-      parentMessageRole: messages.role,
       ownerId: conversations.userId,
       ownerName: users.name,
-      ownerEmail: users.email,
       similarity,
     })
     .from(messageEmbeddings)
@@ -148,11 +145,8 @@ export const findSharedEmbeddings = async (
     .select({
       embeddingId: messageEmbeddings.id,
       embeddingContent: messageEmbeddings.content,
-      parentMessageContent: messages.content,
-      parentMessageRole: messages.role,
       ownerId: knowledgeShares.ownerId,
       ownerName: users.name,
-      ownerEmail: users.email,
       similarity,
     })
     .from(knowledgeShares)
@@ -231,13 +225,8 @@ export const findOrgMembersEmbeddings = async (
   const results = await db
     .select({
       embeddingId: messageEmbeddings.id,
-      embeddingContent: messageEmbeddings.content,
-      parentMessageContent: messages.content,
-      parentMessageRole: messages.role,
       ownerId: conversations.userId,
       ownerName: users.name,
-      ownerEmail: users.email,
-      similarity,
     })
     .from(messageEmbeddings)
     .innerJoin(messages, eq(messageEmbeddings.messageId, messages.id))
@@ -261,7 +250,6 @@ export const findOrgMembersEmbeddings = async (
     results.map((r) => ({
       embeddingId: r.embeddingId,
       ownerName: r.ownerName,
-      similarity: r.similarity,
     }))
   );
 
