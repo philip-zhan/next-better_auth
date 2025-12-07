@@ -13,8 +13,15 @@ import { z } from "zod";
 import { db } from "@/database/db";
 import { conversations } from "@/database/schema/conversations";
 import { messages, messageEmbeddings } from "@/database/schema/messages";
+import {
+  knowledgeRequests,
+  knowledgeShares,
+} from "@/database/schema/knowledge-sharing";
+import { notifications } from "@/database/schema/notifications";
+import { users } from "@/database/schema/auth-schema";
 import { getSession, DEFAULT_ORGANIZATION_ID } from "@/lib/auth";
 import { eq, and } from "drizzle-orm";
+import { triggerKnowledgeRequest } from "@/lib/pusher";
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
@@ -136,8 +143,22 @@ export async function POST(req: Request) {
     console.error("Failed to generate embeddings:", err)
   );
 
+  const systemPrompt = `You are a helpful AI assistant with access to a knowledge base.
+
+When searching for information using the getInformation tool:
+1. First check your own knowledge (ownResults) and shared knowledge (sharedResults)
+2. If the answer is found in ownResults or sharedResults, use that information to respond
+3. If ownResults and sharedResults don't have the answer, but potentialSources shows someone who might know:
+   - Inform the user that a colleague may have relevant knowledge
+   - For example: "[Name] may know about this. Would you like me to ask them?"
+   - Wait for the user's confirmation before calling requestKnowledge
+   - A UI button will also appear for the user to click directly
+4. Only call requestKnowledge if the user explicitly confirms (says "yes", "sure", "please ask them", etc.)
+5. Never reveal the actual content of knowledge that hasn't been shared yet - only mention who might have it`;
+
   const result = streamText({
     model: model,
+    system: systemPrompt,
     messages: convertToModelMessages(chatMessages),
     stopWhen: stepCountIs(10),
     tools: {
@@ -147,14 +168,171 @@ export async function POST(req: Request) {
           question: z.string().describe("the users question"),
         }),
         execute: async ({ question }) => {
-          const { ownResults, sharedResults } =
+          const { ownResults, sharedResults, otherMembersResults } =
             await findEnhancedRelevantContent(question);
-          // Only return authorized knowledge - user's own and explicitly shared
-          // otherMembersResults are excluded as they require permission requests
+          // Return authorized knowledge - user's own and explicitly shared
+          // For otherMembersResults, return only metadata (no content) for privacy
+          // The AI can suggest requesting access from these users
+          const potentialSources = otherMembersResults.map((r) => ({
+            embeddingId: r.embeddingId,
+            ownerName: r.ownerName,
+            ownerEmail: r.ownerEmail,
+            ownerId: r.ownerId,
+            similarity: r.similarity,
+            // Content is intentionally omitted for privacy
+          }));
           return {
             ownResults,
             sharedResults,
+            potentialSources, // Other org members who may have relevant knowledge
           };
+        },
+      }),
+      requestKnowledge: tool({
+        description: `Request access to knowledge from another organization member. Use this when the user confirms they want to ask someone for knowledge after you've suggested it. Only call this after the user explicitly agrees.`,
+        inputSchema: z.object({
+          embeddingId: z
+            .number()
+            .describe("The embedding ID of the knowledge to request"),
+          ownerName: z
+            .string()
+            .describe("The name of the knowledge owner for confirmation"),
+          question: z
+            .string()
+            .describe("The original question that led to this request"),
+        }),
+        execute: async ({ embeddingId, ownerName, question }) => {
+          try {
+            // Get the embedding and find the owner
+            const embeddingData = await db
+              .select({
+                embeddingId: messageEmbeddings.id,
+                ownerId: conversations.userId,
+              })
+              .from(messageEmbeddings)
+              .innerJoin(messages, eq(messageEmbeddings.messageId, messages.id))
+              .innerJoin(
+                conversations,
+                eq(messages.conversationId, conversations.id)
+              )
+              .where(eq(messageEmbeddings.id, embeddingId))
+              .limit(1);
+
+            if (embeddingData.length === 0) {
+              return {
+                success: false,
+                error: "Knowledge source not found",
+              };
+            }
+
+            const ownerId = embeddingData[0].ownerId;
+
+            // Can't request your own knowledge
+            if (ownerId === userId) {
+              return {
+                success: false,
+                error: "This is your own knowledge",
+              };
+            }
+
+            // Check if already shared
+            const existingShare = await db
+              .select()
+              .from(knowledgeShares)
+              .where(
+                and(
+                  eq(knowledgeShares.embeddingId, embeddingId),
+                  eq(knowledgeShares.sharedWithUserId, userId)
+                )
+              )
+              .limit(1);
+
+            if (existingShare.length > 0) {
+              return {
+                success: false,
+                error: "This knowledge is already shared with you",
+              };
+            }
+
+            // Check if pending request already exists
+            const existingRequest = await db
+              .select()
+              .from(knowledgeRequests)
+              .where(
+                and(
+                  eq(knowledgeRequests.embeddingId, embeddingId),
+                  eq(knowledgeRequests.requesterId, userId),
+                  eq(knowledgeRequests.status, "pending")
+                )
+              )
+              .limit(1);
+
+            if (existingRequest.length > 0) {
+              return {
+                success: false,
+                error: "You already have a pending request for this knowledge",
+              };
+            }
+
+            // Create the knowledge request
+            const [newRequest] = await db
+              .insert(knowledgeRequests)
+              .values({
+                requesterId: userId,
+                ownerId,
+                embeddingId,
+                question,
+                status: "pending",
+              })
+              .returning();
+
+            // Create notification for the owner
+            const embeddingContent = await db
+              .select({ content: messageEmbeddings.content })
+              .from(messageEmbeddings)
+              .where(eq(messageEmbeddings.id, embeddingId))
+              .limit(1);
+
+            await db.insert(notifications).values({
+              userId: ownerId,
+              type: "knowledge_request",
+              payload: {
+                requestId: newRequest.id,
+                requesterId: userId,
+                embeddingId,
+                question,
+                chunkContent: embeddingContent[0]?.content || "",
+              },
+            });
+
+            // Get requester info for Pusher event
+            const [requesterInfo] = await db
+              .select({ name: users.name, email: users.email })
+              .from(users)
+              .where(eq(users.id, userId))
+              .limit(1);
+
+            // Trigger realtime notification via Pusher
+            await triggerKnowledgeRequest(ownerId, {
+              requestId: newRequest.id,
+              question,
+              requesterName: requesterInfo?.name || "",
+              requesterEmail: requesterInfo?.email || "",
+              createdAt: new Date().toISOString(),
+            });
+
+            return {
+              success: true,
+              message: `Knowledge request sent to ${ownerName}. They will be notified and can choose to share their knowledge with you.`,
+              requestId: newRequest.id,
+            };
+          } catch (error) {
+            console.error("Error creating knowledge request:", error);
+            return {
+              success: false,
+              error: "Failed to send knowledge request",
+            };
+          }
         },
       }),
     },
