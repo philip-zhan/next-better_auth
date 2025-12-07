@@ -1,4 +1,3 @@
-import { redirect } from "next/navigation";
 import { db } from "@/database/db";
 import { conversations } from "@/database/schema/conversations";
 import { messages } from "@/database/schema/messages";
@@ -75,27 +74,25 @@ export default async function ChatPage({
   // Get conversation ID from URL params
   const conversationId = params.c ? Number.parseInt(params.c, 10) : null;
 
-  // If no conversation ID but user has conversations, redirect to latest
-  if (!conversationId && userConversations.length > 0) {
-    redirect(`/chat?c=${userConversations[0].id}`);
-  }
-
   // Fetch messages if we have a valid conversation ID
   let initialMessages: UIMessage[] = [];
+  let validConversationId: number | null = conversationId;
+  
   if (conversationId) {
     const messages = await getConversationMessages(conversationId, userId);
     if (messages === null) {
-      // Conversation doesn't exist or doesn't belong to user, redirect to new chat
-      redirect("/chat");
+      // Conversation doesn't exist or doesn't belong to user, show new chat
+      validConversationId = null;
+    } else {
+      initialMessages = messages;
     }
-    initialMessages = messages;
   }
 
   return (
     <ChatClient
       conversations={userConversations}
       initialMessages={initialMessages}
-      conversationId={conversationId}
+      conversationId={validConversationId}
     />
   );
 }

@@ -12,7 +12,7 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   // Protected routes - only dashboard routes
-  matcher: ["/dashboard/:path*"],
+  matcher: ["/dashboard/:path*", "/chat/:path*"],
 };
 
 function redirectToLogin(request: NextRequest) {
