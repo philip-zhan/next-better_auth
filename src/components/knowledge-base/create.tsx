@@ -118,13 +118,8 @@ export function KnowledgeBaseCreateForm() {
             >
               Cancel
             </Button>
-            <Button
-              type="submit"
-              disabled={isSubmitting || !content.trim()}
-            >
-              {isSubmitting
-                ? "Adding..."
-                : "Add to Knowledge Base"}
+            <Button type="submit" disabled={isSubmitting || !content.trim()}>
+              {isSubmitting ? "Adding..." : "Add to Knowledge Base"}
             </Button>
           </div>
         </form>
