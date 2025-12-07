@@ -142,10 +142,16 @@ export function ChatClient({
     messages: initialMessages,
     onFinish: useCallback(
       (options: { message: UIMessage }) => {
-        // After receiving a response, if we don't have a conversation ID yet,
-        // we need to refresh to get the new conversation in the sidebar
-        if (!currentConversationId) {
-          router.refresh();
+        // Extract conversation ID from message metadata
+        const metadata = options.message.metadata as
+          | { conversationId?: number }
+          | undefined;
+        const newConversationId = metadata?.conversationId;
+
+        // If we got a new conversation ID and don't have one yet, redirect to it
+        if (newConversationId && !currentConversationId) {
+          setCurrentConversationId(newConversationId);
+          router.replace(`/chat?c=${newConversationId}`);
         }
       },
       [currentConversationId, router]

@@ -158,14 +158,16 @@ export async function POST(req: Request) {
     },
   });
 
-  // Return the stream response with the conversation ID in headers
-  const response = result.toUIMessageStreamResponse({
+  // Return the stream response with the conversation ID in message metadata
+  return result.toUIMessageStreamResponse({
     sendSources: true,
     sendReasoning: true,
+    messageMetadata: ({ part }) => {
+      // Include conversation ID in the message start metadata
+      if (part.type === "start") {
+        return { conversationId: activeConversationId };
+      }
+      return undefined;
+    },
   });
-
-  // Add conversation ID to response headers
-  response.headers.set("X-Conversation-Id", String(activeConversationId));
-
-  return response;
 }
