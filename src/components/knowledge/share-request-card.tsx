@@ -56,7 +56,11 @@ interface KnowledgeRequest {
 
 interface ShareRequestCardProps {
   request: KnowledgeRequest;
-  onRespond?: (requestId: number, action: "approve" | "deny", responseContent?: string) => Promise<void>;
+  onRespond?: (
+    requestId: number,
+    action: "approve" | "deny",
+    responseContent?: string
+  ) => Promise<void>;
   className?: string;
 }
 
@@ -71,7 +75,7 @@ export function ShareRequestCard({
 
   const handleRespond = async (action: "approve" | "deny") => {
     if (!onRespond) return;
-    
+
     setIsLoading(true);
     try {
       await onRespond(request.id, action, responseContent || undefined);
@@ -146,13 +150,22 @@ export function ShareRequestCard({
               <CardTitle className="text-base">
                 {request.isOwner ? (
                   <>
-                    <span className="font-semibold">{otherUser.name || otherUser.email}</span>
-                    <span className="text-muted-foreground font-normal"> wants access</span>
+                    <span className="font-semibold">
+                      {otherUser.name || otherUser.email}
+                    </span>
+                    <span className="text-muted-foreground font-normal">
+                      {" "}
+                      wants access
+                    </span>
                   </>
                 ) : (
                   <>
-                    <span className="text-muted-foreground font-normal">Request to </span>
-                    <span className="font-semibold">{otherUser.name || otherUser.email}</span>
+                    <span className="text-muted-foreground font-normal">
+                      Request to{" "}
+                    </span>
+                    <span className="font-semibold">
+                      {otherUser.name || otherUser.email}
+                    </span>
                   </>
                 )}
               </CardTitle>
@@ -257,7 +270,8 @@ export function ShareRequestCard({
       {!request.isOwner && request.status === "pending" && (
         <CardFooter className="pt-0">
           <p className="text-xs text-muted-foreground">
-            Waiting for {request.owner.name || request.owner.email} to respond...
+            Waiting for {request.owner.name || request.owner.email} to
+            respond...
           </p>
         </CardFooter>
       )}
@@ -267,7 +281,11 @@ export function ShareRequestCard({
 
 interface ShareRequestListProps {
   requests: KnowledgeRequest[];
-  onRespond?: (requestId: number, action: "approve" | "deny", responseContent?: string) => Promise<void>;
+  onRespond?: (
+    requestId: number,
+    action: "approve" | "deny",
+    responseContent?: string
+  ) => Promise<void>;
   emptyMessage?: string;
   className?: string;
 }
@@ -280,7 +298,12 @@ export function ShareRequestList({
 }: ShareRequestListProps) {
   if (requests.length === 0) {
     return (
-      <div className={cn("flex flex-col items-center justify-center py-12 text-center", className)}>
+      <div
+        className={cn(
+          "flex flex-col items-center justify-center py-12 text-center",
+          className
+        )}
+      >
         <div className="rounded-full bg-muted p-4 mb-4">
           <SendIcon className="size-6 text-muted-foreground" />
         </div>
@@ -301,4 +324,3 @@ export function ShareRequestList({
     </div>
   );
 }
-

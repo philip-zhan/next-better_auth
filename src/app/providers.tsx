@@ -10,6 +10,7 @@ import { Toaster } from "sonner";
 import { authClient } from "@/lib/auth-client";
 import { useUploadThing } from "@/lib/uploadthing";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { RealtimeProvider } from "@/components/realtime-provider";
 // import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
 const queryClient = new QueryClient();
@@ -69,9 +70,11 @@ export function Providers({ children }: { children: ReactNode }) {
           }}
           Link={Link}
         >
-          <NextTopLoader color="var(--primary)" showSpinner={false} />
-          {children}
-          <Toaster />
+          <RealtimeProvider>
+            <NextTopLoader color="var(--primary)" showSpinner={false} />
+            {children}
+            <Toaster />
+          </RealtimeProvider>
         </AuthUIProvider>
       </ThemeProvider>
       {/* <ReactQueryDevtools initialIsOpen={false} /> */}

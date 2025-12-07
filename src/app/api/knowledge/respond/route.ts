@@ -8,6 +8,7 @@ import { notifications } from "@/database/schema/notifications";
 import { getSession } from "@/lib/auth";
 import { eq, and } from "drizzle-orm";
 import { z } from "zod";
+import { triggerKnowledgeResponse } from "@/lib/pusher";
 
 const respondSchema = z.object({
   requestId: z.number(),
@@ -73,6 +74,14 @@ export async function POST(req: Request) {
         embeddingId: request.embeddingId,
         responseContent: responseContent || null,
       },
+    });
+
+    // Trigger realtime notification via Pusher
+    await triggerKnowledgeResponse(request.requesterId, {
+      requestId,
+      status: newStatus as "approved" | "denied",
+      responseContent: responseContent || undefined,
+      respondedAt: new Date().toISOString(),
     });
 
     return NextResponse.json({

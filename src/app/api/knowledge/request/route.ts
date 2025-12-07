@@ -7,9 +7,11 @@ import {
 import { messageEmbeddings, messages } from "@/database/schema/messages";
 import { conversations } from "@/database/schema/conversations";
 import { notifications } from "@/database/schema/notifications";
-import { getSession, getUserId } from "@/lib/auth";
+import { users } from "@/database/schema/auth-schema";
+import { getSession } from "@/lib/auth";
 import { eq, and } from "drizzle-orm";
 import { z } from "zod";
+import { triggerKnowledgeRequest } from "@/lib/pusher";
 
 const requestSchema = z.object({
   embeddingId: z.number(),
@@ -119,6 +121,22 @@ export async function POST(req: Request) {
       },
     });
 
+    // Get requester info for Pusher event
+    const [requesterInfo] = await db
+      .select({ name: users.name, email: users.email })
+      .from(users)
+      .where(eq(users.id, requesterId))
+      .limit(1);
+
+    // Trigger realtime notification via Pusher
+    await triggerKnowledgeRequest(ownerId, {
+      requestId: newRequest.id,
+      question,
+      requesterName: requesterInfo?.name || "",
+      requesterEmail: requesterInfo?.email || "",
+      createdAt: new Date().toISOString(),
+    });
+
     return NextResponse.json({
       success: true,
       requestId: newRequest.id,
@@ -137,4 +155,3 @@ export async function POST(req: Request) {
     );
   }
 }
-
