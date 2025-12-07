@@ -10,11 +10,13 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarFooter,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { MessageSquareIcon, PlusIcon } from "lucide-react";
 import type { ConversationItem } from "../../app/chat/types";
+import { UserButton } from "@daveyplate/better-auth-ui";
 
 type ChatSidebarProps = {
   conversations: ConversationItem[];
@@ -105,6 +107,9 @@ export function ChatSidebar({
           )}
         </ScrollArea>
       </SidebarContent>
+      <SidebarFooter>
+        <UserButton size="sm" />
+      </SidebarFooter>
     </Sidebar>
   );
 }

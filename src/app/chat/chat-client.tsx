@@ -6,7 +6,6 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { useRouter } from "next/navigation";
 import type { PromptInputMessage } from "@/components/ai-elements/prompt-input";
 import { ChatSidebar } from "../../components/chat/chat-sidebar";
-import { ChatHeader } from "../../components/chat/chat-header";
 import { ChatMessages } from "../../components/chat/chat-messages";
 import { ChatInput } from "../../components/chat/chat-input";
 import type { ConversationItem } from "./types";
@@ -89,8 +88,6 @@ export function ChatClient({
 
       <SidebarInset>
         <div className="flex h-screen w-full flex-col bg-background">
-          <ChatHeader />
-
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
             <div className="mx-auto flex h-full w-full max-w-4xl flex-col">
               <ChatMessages
