@@ -68,18 +68,17 @@ export const findRelevantContent = async (
   return similarContents;
 };
 
-// Enhanced search result type
-export type EnhancedSearchResult = {
+export type KnowledgeSource = {
   embeddingId: number;
   embeddingContent: string;
-  parentMessageContent: string;
-  parentMessageRole: "user" | "assistant" | "system";
   ownerId: string;
   ownerName: string | null;
-  ownerEmail: string;
-  isOwn: boolean;
-  isShared: boolean;
-  similarity: number;
+};
+
+export type KnowledgeSourceSuggestion = {
+  embeddingId: number;
+  ownerName: string | null;
+  ownerId: string;
 };
 
 // Phase 1: Search user's own message embeddings
@@ -88,7 +87,7 @@ export const findUserOwnEmbeddings = async (
   userId: string,
   limit = 4,
   similarityThreshold = 0.5
-): Promise<EnhancedSearchResult[]> => {
+): Promise<KnowledgeSource[]> => {
   const userQueryEmbedded = await generateEmbedding(userQuery);
   const similarity = sql<number>`${cosineDistance(
     messageEmbeddings.embedding,
@@ -110,7 +109,9 @@ export const findUserOwnEmbeddings = async (
     .innerJoin(messages, eq(messageEmbeddings.messageId, messages.id))
     .innerJoin(conversations, eq(messages.conversationId, conversations.id))
     .innerJoin(users, eq(conversations.userId, users.id))
-    .where(and(eq(conversations.userId, userId), lt(similarity, similarityThreshold)))
+    .where(
+      and(eq(conversations.userId, userId), lt(similarity, similarityThreshold))
+    )
     .orderBy(asc(similarity))
     .limit(limit);
 
@@ -127,7 +128,7 @@ export const findSharedEmbeddings = async (
   userId: string,
   limit = 4,
   similarityThreshold = 0.5
-): Promise<EnhancedSearchResult[]> => {
+): Promise<KnowledgeSource[]> => {
   const userQueryEmbedded = await generateEmbedding(userQuery);
   const similarity = sql<number>`${cosineDistance(
     messageEmbeddings.embedding,
@@ -153,7 +154,10 @@ export const findSharedEmbeddings = async (
     .innerJoin(messages, eq(messageEmbeddings.messageId, messages.id))
     .innerJoin(users, eq(knowledgeShares.ownerId, users.id))
     .where(
-      and(eq(knowledgeShares.sharedWithUserId, userId), lt(similarity, similarityThreshold))
+      and(
+        eq(knowledgeShares.sharedWithUserId, userId),
+        lt(similarity, similarityThreshold)
+      )
     )
     .orderBy(asc(similarity))
     .limit(limit);
@@ -173,7 +177,7 @@ export const findOrgMembersEmbeddings = async (
   excludeEmbeddingIds: number[],
   limit = 4,
   similarityThreshold = 0.5
-): Promise<EnhancedSearchResult[]> => {
+): Promise<KnowledgeSourceSuggestion[]> => {
   const userQueryEmbedded = await generateEmbedding(userQuery);
   const similarity = sql<number>`${cosineDistance(
     messageEmbeddings.embedding,
@@ -234,11 +238,14 @@ export const findOrgMembersEmbeddings = async (
     .orderBy(asc(similarity))
     .limit(limit);
 
-  console.log("[findOrgMembersEmbeddings] Found results:", results.map(r => ({
-    embeddingId: r.embeddingId,
-    ownerName: r.ownerName,
-    similarity: r.similarity,
-  })));
+  console.log(
+    "[findOrgMembersEmbeddings] Found results:",
+    results.map((r) => ({
+      embeddingId: r.embeddingId,
+      ownerName: r.ownerName,
+      similarity: r.similarity,
+    }))
+  );
 
   return results.map((r) => ({
     ...r,
@@ -252,9 +259,8 @@ export const findEnhancedRelevantContent = async (
   userQuery: string,
   similarityThreshold = 0.5
 ): Promise<{
-  ownResults: EnhancedSearchResult[];
-  sharedResults: EnhancedSearchResult[];
-  otherMembersResults: EnhancedSearchResult[];
+  knowledgeSources: KnowledgeSource[];
+  knowledgeSourceSuggestions: KnowledgeSourceSuggestion[];
 }> => {
   console.log("findEnhancedRelevantContent:", userQuery);
 
@@ -263,17 +269,27 @@ export const findEnhancedRelevantContent = async (
   const organizationId = await getOrganizationId();
 
   // Phase 1: Search user's own embeddings
-  const ownResults = await findUserOwnEmbeddings(userQuery, userId, 4, similarityThreshold);
+  const ownResults = await findUserOwnEmbeddings(
+    userQuery,
+    userId,
+    4,
+    similarityThreshold
+  );
 
   // Phase 2: Search shared embeddings
-  const sharedResults = await findSharedEmbeddings(userQuery, userId, 4, similarityThreshold);
+  const sharedResults = await findSharedEmbeddings(
+    userQuery,
+    userId,
+    4,
+    similarityThreshold
+  );
 
   // Phase 3: Search other org members' embeddings
   const excludeIds = [
     ...ownResults.map((r) => r.embeddingId),
     ...sharedResults.map((r) => r.embeddingId),
   ];
-  const otherMembersResults = await findOrgMembersEmbeddings(
+  const knowledgeSourceSuggestions = await findOrgMembersEmbeddings(
     userQuery,
     userId,
     organizationId,
@@ -283,8 +299,7 @@ export const findEnhancedRelevantContent = async (
   );
 
   return {
-    ownResults,
-    sharedResults,
-    otherMembersResults,
+    knowledgeSources: [...ownResults, ...sharedResults],
+    knowledgeSourceSuggestions,
   };
 };

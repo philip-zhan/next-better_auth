@@ -143,18 +143,17 @@ export async function POST(req: Request) {
     console.error("Failed to generate embeddings:", err)
   );
 
-  const systemPrompt = `You are a helpful AI assistant with access to a knowledge base.
-
-When searching for information using the getInformation tool:
-1. First check your own knowledge (ownResults) and shared knowledge (sharedResults)
-2. If the answer is found in ownResults or sharedResults, use that information to respond
-3. If ownResults and sharedResults don't have the answer, but potentialSources shows someone who might know:
-   - Inform the user that a colleague may have relevant knowledge
-   - For example: "[Name] may know about this. Would you like me to ask them?"
-   - Wait for the user's confirmation before calling requestKnowledge
-   - A UI button will also appear for the user to click directly
-4. Only call requestKnowledge if the user explicitly confirms (says "yes", "sure", "please ask them", etc.)
-5. Never reveal the actual content of knowledge that hasn't been shared yet - only mention who might have it`;
+  const systemPrompt = `
+  You are a helpful AI assistant with access to a knowledge base.
+  When searching for information using the getInformation tool:
+  1. If the answer is found in knowledgeSources, use that information to respond
+  2. If knowledgeSources don't have the answer, but knowledgeSourceSuggestions shows someone who might know:
+    - Inform the user that a colleague may have relevant knowledge
+    - For example: "[Name] may know about this. Would you like me to ask them?"
+    - Wait for the user's confirmation before calling requestKnowledge
+    - A UI button will appear for the user to click to request the knowledge
+  4. Only call requestKnowledge if the user explicitly confirms (says "yes", "sure", "please ask them", etc.)
+  `;
 
   const result = streamText({
     model: model,
@@ -163,39 +162,25 @@ When searching for information using the getInformation tool:
     stopWhen: stepCountIs(10),
     tools: {
       getInformation: tool({
-        description: `get information from your knowledge base to answer questions.`,
+        description: `get information from your knowledge base to answer questions. Return the knowledge sources and knowledge source suggestions.`,
         inputSchema: z.object({
           question: z.string().describe("the users question"),
         }),
         execute: async ({ question }) => {
           console.log("[getInformation] Searching for:", question);
-          const { ownResults, sharedResults, otherMembersResults } =
+          const { knowledgeSources, knowledgeSourceSuggestions } =
             await findEnhancedRelevantContent(question);
-          console.log("[getInformation] ownResults count:", ownResults.length);
           console.log(
-            "[getInformation] sharedResults count:",
-            sharedResults.length
+            "[getInformation] knowledgeSources count:",
+            knowledgeSources.length
           );
           console.log(
-            "[getInformation] otherMembersResults count:",
-            otherMembersResults.length
+            "[getInformation] knowledgeSourceSuggestions count:",
+            knowledgeSourceSuggestions.length
           );
-          // Return authorized knowledge - user's own and explicitly shared
-          // For otherMembersResults, return only metadata (no content) for privacy
-          // The AI can suggest requesting access from these users
-          const potentialSources = otherMembersResults.map((r) => ({
-            embeddingId: r.embeddingId,
-            ownerName: r.ownerName,
-            ownerEmail: r.ownerEmail,
-            ownerId: r.ownerId,
-            similarity: r.similarity,
-            // Content is intentionally omitted for privacy
-          }));
-          console.log("[getInformation] potentialSources:", potentialSources);
           return {
-            ownResults,
-            sharedResults,
-            potentialSources, // Other org members who may have relevant knowledge
+            knowledgeSources,
+            knowledgeSourceSuggestions,
           };
         },
       }),
