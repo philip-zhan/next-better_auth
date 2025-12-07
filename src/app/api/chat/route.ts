@@ -146,8 +146,16 @@ export async function POST(req: Request) {
         inputSchema: z.object({
           question: z.string().describe("the users question"),
         }),
-        execute: async ({ question }) =>
-          await findEnhancedRelevantContent(question),
+        execute: async ({ question }) => {
+          const { ownResults, sharedResults } =
+            await findEnhancedRelevantContent(question);
+          // Only return authorized knowledge - user's own and explicitly shared
+          // otherMembersResults are excluded as they require permission requests
+          return {
+            ownResults,
+            sharedResults,
+          };
+        },
       }),
     },
     onFinish: async ({ text }) => {

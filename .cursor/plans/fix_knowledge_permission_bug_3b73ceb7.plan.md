@@ -1,15 +1,9 @@
 ---
-name: Split Sidebar Knowledge Requests
-overview: Split the chat sidebar vertically to show conversations on top and pending knowledge share requests on the bottom, with realtime updates via Pusher.
+name: Fix Knowledge Permission Bug
+overview: Fix the bug where other users' knowledge is included in AI responses without permission by filtering out unshared embeddings from the tool results.
 todos:
-  - id: sidebar-split
-    content: Split ChatSidebar with conversations on top and requests on bottom
-    status: completed
-  - id: request-item
-    content: Create compact ShareRequestItem component for sidebar display
-    status: completed
-  - id: respond-dialog
-    content: Add dialog to respond to requests from sidebar
+  - id: filter-unshared
+    content: Filter out unshared otherMembersResults from getInformation tool
     status: completed
 ---
 
