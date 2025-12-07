@@ -234,6 +234,12 @@ export const findOrgMembersEmbeddings = async (
     .orderBy(asc(similarity))
     .limit(limit);
 
+  console.log("[findOrgMembersEmbeddings] Found results:", results.map(r => ({
+    embeddingId: r.embeddingId,
+    ownerName: r.ownerName,
+    similarity: r.similarity,
+  })));
+
   return results.map((r) => ({
     ...r,
     isOwn: false,

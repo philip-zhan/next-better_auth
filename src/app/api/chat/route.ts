@@ -168,8 +168,18 @@ When searching for information using the getInformation tool:
           question: z.string().describe("the users question"),
         }),
         execute: async ({ question }) => {
+          console.log("[getInformation] Searching for:", question);
           const { ownResults, sharedResults, otherMembersResults } =
             await findEnhancedRelevantContent(question);
+          console.log("[getInformation] ownResults count:", ownResults.length);
+          console.log(
+            "[getInformation] sharedResults count:",
+            sharedResults.length
+          );
+          console.log(
+            "[getInformation] otherMembersResults count:",
+            otherMembersResults.length
+          );
           // Return authorized knowledge - user's own and explicitly shared
           // For otherMembersResults, return only metadata (no content) for privacy
           // The AI can suggest requesting access from these users
@@ -181,6 +191,7 @@ When searching for information using the getInformation tool:
             similarity: r.similarity,
             // Content is intentionally omitted for privacy
           }));
+          console.log("[getInformation] potentialSources:", potentialSources);
           return {
             ownResults,
             sharedResults,
@@ -211,7 +222,10 @@ When searching for information using the getInformation tool:
 
           try {
             // Get the embedding and find the owner
-            console.log("[requestKnowledge] Looking up embedding:", embeddingId);
+            console.log(
+              "[requestKnowledge] Looking up embedding:",
+              embeddingId
+            );
             const embeddingData = await db
               .select({
                 embeddingId: messageEmbeddings.id,
@@ -227,7 +241,10 @@ When searching for information using the getInformation tool:
               .limit(1);
 
             if (embeddingData.length === 0) {
-              console.log("[requestKnowledge] Embedding not found:", embeddingId);
+              console.log(
+                "[requestKnowledge] Embedding not found:",
+                embeddingId
+              );
               return {
                 success: false,
                 error: "Knowledge source not found",
@@ -239,7 +256,9 @@ When searching for information using the getInformation tool:
 
             // Can't request your own knowledge
             if (ownerId === userId) {
-              console.log("[requestKnowledge] User tried to request own knowledge");
+              console.log(
+                "[requestKnowledge] User tried to request own knowledge"
+              );
               return {
                 success: false,
                 error: "This is your own knowledge",
@@ -260,7 +279,9 @@ When searching for information using the getInformation tool:
               .limit(1);
 
             if (existingShare.length > 0) {
-              console.log("[requestKnowledge] Knowledge already shared with user");
+              console.log(
+                "[requestKnowledge] Knowledge already shared with user"
+              );
               return {
                 success: false,
                 error: "This knowledge is already shared with you",
@@ -304,7 +325,9 @@ When searching for information using the getInformation tool:
             console.log("[requestKnowledge] Created request:", newRequest.id);
 
             // Create notification for the owner
-            console.log("[requestKnowledge] Creating notification for owner...");
+            console.log(
+              "[requestKnowledge] Creating notification for owner..."
+            );
             const embeddingContent = await db
               .select({ content: messageEmbeddings.content })
               .from(messageEmbeddings)
@@ -332,7 +355,10 @@ When searching for information using the getInformation tool:
               .limit(1);
 
             // Trigger realtime notification via Pusher
-            console.log("[requestKnowledge] Triggering Pusher event for owner:", ownerId);
+            console.log(
+              "[requestKnowledge] Triggering Pusher event for owner:",
+              ownerId
+            );
             await triggerKnowledgeRequest(ownerId, {
               requestId: newRequest.id,
               question,
@@ -342,7 +368,10 @@ When searching for information using the getInformation tool:
             });
             console.log("[requestKnowledge] Pusher event triggered");
 
-            console.log("[requestKnowledge] Success! Request ID:", newRequest.id);
+            console.log(
+              "[requestKnowledge] Success! Request ID:",
+              newRequest.id
+            );
             return {
               success: true,
               message: `Knowledge request sent to ${ownerName}. They will be notified and can choose to share their knowledge with you.`,
