@@ -278,6 +278,7 @@ export function ChatClient({
     model: string,
     webSearch: boolean
   ) => {
+    const trimmedText = message.text?.trim() ?? "";
     // Generate publicId if starting a new conversation
     const publicId = currentConversationId || nanoid();
     
@@ -289,7 +290,7 @@ export function ChatClient({
 
     sendMessage(
       {
-        text: message.text || "Sent with attachments",
+        text: trimmedText || "Sent with attachments",
         files: message.files,
       },
       {
