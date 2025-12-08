@@ -20,6 +20,9 @@ type ChatMessagesProps = {
   isToolCallPending?: (toolCallId: string) => boolean;
 };
 
+// Hidden system messages that shouldn't be displayed
+const HIDDEN_MESSAGES = ["[User declined to request knowledge from that person]"];
+
 export function ChatMessages({
   messages,
   status,
@@ -28,10 +31,19 @@ export function ChatMessages({
   onToolDecline,
   isToolCallPending,
 }: ChatMessagesProps) {
+  // Filter out hidden system messages
+  const visibleMessages = messages.filter((msg) => {
+    const textPart = msg.parts.find((p) => p.type === "text");
+    if (textPart && "text" in textPart) {
+      return !HIDDEN_MESSAGES.includes(textPart.text);
+    }
+    return true;
+  });
+
   return (
     <Conversation className="min-h-0 flex-1">
       <ConversationContent>
-        {messages.length === 0 ? (
+        {visibleMessages.length === 0 ? (
           <ConversationEmptyState
             title="Start a conversation"
             description="Ask me anything! I'm here to help."
@@ -39,12 +51,12 @@ export function ChatMessages({
           />
         ) : (
           <>
-            {messages.map((message, index) => (
+            {visibleMessages.map((message, index) => (
               <ChatMessage
                 key={message.id}
                 message={message}
                 isStreaming={status === "streaming"}
-                isLastMessage={index === messages.length - 1}
+                isLastMessage={index === visibleMessages.length - 1}
                 onRegenerate={onRegenerate}
                 onToolConfirm={onToolConfirm}
                 onToolDecline={onToolDecline}
