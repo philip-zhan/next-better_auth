@@ -146,6 +146,10 @@ export async function POST(req: Request) {
     - Call the askForConfirmation tool to ask the user if they want to request knowledge from that person
     - The tool will display a UI for the user to confirm or decline
   3. Do NOT mention asking for confirmation in your text response - just call the askForConfirmation tool
+  4. If the askForConfirmation tool returns { confirmed: false }, the user declined the request.
+     Do NOT call askForConfirmation again. Instead, continue the conversation by providing
+     whatever help you can without that knowledge (e.g., suggest where they might find the information,
+     or offer alternative assistance).
   `;
 
   const result = streamText({

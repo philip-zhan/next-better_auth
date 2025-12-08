@@ -89,20 +89,9 @@ export function KnowledgeConfirmation({
       );
     }
     if (!output.confirmed) {
-      return (
-        <Card
-          className={cn(
-            "border-muted bg-muted/30",
-            className
-          )}
-        >
-          <CardContent className="flex items-center gap-3 py-3">
-            <p className="text-sm text-muted-foreground">
-              Request to {input.ownerName} was cancelled.
-            </p>
-          </CardContent>
-        </Card>
-      );
+      // User declined - dismiss the confirmation box completely
+      // The AI will continue the conversation naturally
+      return null;
     }
   }
 

@@ -27,7 +27,7 @@ type ChatMessageProps = {
   isStreaming: boolean;
   isLastMessage: boolean;
   onRegenerate: () => void;
-  onToolConfirm?: (toolCallId: string, embeddingId: number, question: string) => void;
+  onToolConfirm?: (toolCallId: string, embeddingId: number, question: string, ownerName: string) => void;
   onToolDecline?: (toolCallId: string) => void;
   isToolCallPending?: (toolCallId: string) => boolean;
 };
@@ -157,7 +157,8 @@ export function ChatMessage({
                     onToolConfirm?.(
                       toolPart.toolCallId,
                       input.embeddingId,
-                      input.question
+                      input.question,
+                      input.ownerName
                     )
                   }
                   onDecline={() => onToolDecline?.(toolPart.toolCallId)}

@@ -15,7 +15,7 @@ type ChatMessagesProps = {
   messages: UIMessage[];
   status: "ready" | "submitted" | "streaming" | "error";
   onRegenerate: () => void;
-  onToolConfirm?: (toolCallId: string, embeddingId: number, question: string) => void;
+  onToolConfirm?: (toolCallId: string, embeddingId: number, question: string, ownerName: string) => void;
   onToolDecline?: (toolCallId: string) => void;
   isToolCallPending?: (toolCallId: string) => boolean;
 };
