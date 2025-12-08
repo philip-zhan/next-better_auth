@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { UserIcon, CheckIcon, Loader2Icon, XIcon } from "lucide-react";
@@ -14,7 +13,7 @@ export type ConfirmationInput = {
 
 type KnowledgeConfirmationProps = {
   input: ConfirmationInput;
-  state: "input-available" | "output-available" | "output-error";
+  state: "input-available" | "output-available" | "output-error" | "loading";
   output?: { confirmed: boolean; requestSent?: boolean; error?: string };
   onConfirm: () => void;
   onDecline: () => void;
@@ -29,16 +28,28 @@ export function KnowledgeConfirmation({
   onDecline,
   className,
 }: KnowledgeConfirmationProps) {
-  const [isLoading, setIsLoading] = useState(false);
+  const isLoading = state === "loading";
 
-  const handleConfirm = async () => {
-    setIsLoading(true);
-    onConfirm();
-  };
-
-  const handleDecline = () => {
-    onDecline();
-  };
+  // Show loading state
+  if (isLoading) {
+    return (
+      <Card
+        className={cn(
+          "border-dashed border-amber-500/50 bg-amber-50/50 dark:bg-amber-950/20",
+          className
+        )}
+      >
+        <CardContent className="py-4">
+          <div className="flex items-center gap-3">
+            <Loader2Icon className="size-5 animate-spin text-amber-600" />
+            <p className="text-sm text-muted-foreground">
+              Sending request to {input.ownerName}...
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   // Already has output - show result
   if (state === "output-available" && output) {
@@ -116,22 +127,16 @@ export function KnowledgeConfirmation({
             <div className="flex gap-2">
               <Button
                 size="sm"
-                onClick={handleConfirm}
-                disabled={isLoading}
+                onClick={onConfirm}
                 className="gap-2"
               >
-                {isLoading ? (
-                  <Loader2Icon className="size-4 animate-spin" />
-                ) : (
-                  <CheckIcon className="size-4" />
-                )}
+                <CheckIcon className="size-4" />
                 Yes, ask them
               </Button>
               <Button
                 size="sm"
                 variant="outline"
-                onClick={handleDecline}
-                disabled={isLoading}
+                onClick={onDecline}
               >
                 Never mind
               </Button>

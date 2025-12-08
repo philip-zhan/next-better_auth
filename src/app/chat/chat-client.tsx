@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { useChat, type UIMessage } from "@ai-sdk/react";
+import { lastAssistantMessageIsCompleteWithToolCalls } from "ai";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { useRouter } from "next/navigation";
 import type { PromptInputMessage } from "@/components/ai-elements/prompt-input";
@@ -25,6 +26,9 @@ export function ChatClient({
   const [currentConversationId, setCurrentConversationId] = useState<
     number | null
   >(conversationId);
+  const [pendingToolCalls, setPendingToolCalls] = useState<Set<string>>(
+    new Set()
+  );
 
   const {
     messages,
@@ -36,6 +40,8 @@ export function ChatClient({
   } = useChat({
     id: conversationId ? String(conversationId) : undefined,
     messages: initialMessages,
+    // Automatically send when all tool results are available
+    sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
     onFinish: useCallback(
       (options: { message: UIMessage }) => {
         // Extract conversation ID from message metadata
@@ -81,7 +87,13 @@ export function ChatClient({
 
   const handleToolConfirm = useCallback(
     async (toolCallId: string, embeddingId: number, question: string) => {
+      setPendingToolCalls((prev) => new Set(prev).add(toolCallId));
       const result = await handleKnowledgeConfirm(embeddingId, question);
+      setPendingToolCalls((prev) => {
+        const next = new Set(prev);
+        next.delete(toolCallId);
+        return next;
+      });
       addToolResult({
         tool: "askForConfirmation",
         toolCallId,
@@ -100,6 +112,11 @@ export function ChatClient({
       });
     },
     [addToolResult]
+  );
+
+  const isToolCallPending = useCallback(
+    (toolCallId: string) => pendingToolCalls.has(toolCallId),
+    [pendingToolCalls]
   );
 
   const handleSubmit = (
@@ -151,6 +168,7 @@ export function ChatClient({
                 onRegenerate={regenerate}
                 onToolConfirm={handleToolConfirm}
                 onToolDecline={handleToolDecline}
+                isToolCallPending={isToolCallPending}
               />
 
               <ChatInput status={status} onSubmit={handleSubmit} />

@@ -29,6 +29,7 @@ type ChatMessageProps = {
   onRegenerate: () => void;
   onToolConfirm?: (toolCallId: string, embeddingId: number, question: string) => void;
   onToolDecline?: (toolCallId: string) => void;
+  isToolCallPending?: (toolCallId: string) => boolean;
 };
 
 export function ChatMessage({
@@ -38,6 +39,7 @@ export function ChatMessage({
   onRegenerate,
   onToolConfirm,
   onToolDecline,
+  isToolCallPending,
 }: ChatMessageProps) {
   const sourceParts = message.parts.filter(
     (part) => part.type === "source-url"
@@ -134,14 +136,22 @@ export function ChatMessage({
             const input = toolPart.input;
             if (!input) return null;
 
-            const state =
-              toolPart.state === "result" ? "output-available" : "input-available";
+            // Determine the state for the confirmation component
+            const isPending = isToolCallPending?.(toolPart.toolCallId) ?? false;
+            let confirmationState: "input-available" | "output-available" | "loading";
+            if (isPending) {
+              confirmationState = "loading";
+            } else if (toolPart.state === "result") {
+              confirmationState = "output-available";
+            } else {
+              confirmationState = "input-available";
+            }
 
             return (
               <div key={`${message.id}-tool-${partIndex}`} className="my-3 ml-10">
                 <KnowledgeConfirmation
                   input={input}
-                  state={state}
+                  state={confirmationState}
                   output={toolPart.output}
                   onConfirm={() =>
                     onToolConfirm?.(

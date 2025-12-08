@@ -17,6 +17,7 @@ type ChatMessagesProps = {
   onRegenerate: () => void;
   onToolConfirm?: (toolCallId: string, embeddingId: number, question: string) => void;
   onToolDecline?: (toolCallId: string) => void;
+  isToolCallPending?: (toolCallId: string) => boolean;
 };
 
 export function ChatMessages({
@@ -25,6 +26,7 @@ export function ChatMessages({
   onRegenerate,
   onToolConfirm,
   onToolDecline,
+  isToolCallPending,
 }: ChatMessagesProps) {
   return (
     <Conversation className="min-h-0 flex-1">
@@ -46,6 +48,7 @@ export function ChatMessages({
                 onRegenerate={onRegenerate}
                 onToolConfirm={onToolConfirm}
                 onToolDecline={onToolDecline}
+                isToolCallPending={isToolCallPending}
               />
             ))}
 

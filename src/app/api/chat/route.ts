@@ -93,14 +93,16 @@ async function generateAndSaveEmbeddings(
   }
 }
 
+const DEFAULT_MODEL = "openai/gpt-5.1-thinking";
+
 export async function POST(req: Request) {
   const {
     messages: chatMessages,
-    model,
+    model = DEFAULT_MODEL,
     conversationId,
   }: {
     messages: UIMessage[];
-    model: string;
+    model?: string;
     conversationId?: number;
   } = await req.json();
 
