@@ -70,11 +70,21 @@ const stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export const auth = betterAuth({
+  baseURL: process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+  trustedOrigins: [
+    process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+    "http://localhost:3000"
+  ].filter(Boolean),
   database: drizzleAdapter(db, {
     provider: "pg",
     usePlural: true,
     schema,
   }),
+  account: {
+    // Skip state cookie check to fix state_mismatch errors in development/preview environments
+    // This is safe for development but consider proper cookie configuration for production
+    skipStateCookieCheck: process.env.NODE_ENV === "development" || process.env.VERCEL_ENV === "preview",
+  },
   emailAndPassword: {
     enabled: true,
     sendResetPassword: async ({ user, url }) => {

@@ -26,12 +26,12 @@ import { GlobeIcon } from "lucide-react";
 
 const models = [
   {
-    name: "GPT 5.1 Thinking",
-    value: "openai/gpt-5.1-thinking",
-  },
-  {
     name: "GPT 5.1 Instant",
     value: "openai/gpt-5.1-instant",
+  },
+  {
+    name: "GPT 5.1 Thinking",
+    value: "openai/gpt-5.1-thinking",
   },
 ];
 
@@ -50,14 +50,19 @@ export function ChatInput({ status, onSubmit }: ChatInputProps) {
   const [webSearch, setWebSearch] = useState(false);
 
   const handleSubmit = (message: PromptInputMessage) => {
-    const hasText = Boolean(message.text?.trim());
-    const hasAttachments = Boolean(message.files?.length);
+    const trimmedText = message.text?.trim() ?? "";
+    const sanitizedMessage: PromptInputMessage = {
+      ...message,
+      text: trimmedText,
+    };
+    const hasText = Boolean(trimmedText);
+    const hasAttachments = Boolean(sanitizedMessage.files?.length);
 
     if (!(hasText || hasAttachments)) {
       return;
     }
 
-    onSubmit(message, model, webSearch);
+    onSubmit(sanitizedMessage, model, webSearch);
     setInput("");
   };
 

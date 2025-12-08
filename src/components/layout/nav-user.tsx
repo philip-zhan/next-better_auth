@@ -28,6 +28,7 @@ import {
 } from "@remixicon/react";
 
 import { authClient } from "@/lib/auth-client";
+import { toast } from "sonner";
 
 // Better Auth UI Profile types
 interface Profile {
@@ -63,7 +64,7 @@ export function NavUser() {
         },
       });
     } catch (error) {
-      console.error("Sign out error:", error);
+      toast.error("Failed to sign out");
     }
   };
 

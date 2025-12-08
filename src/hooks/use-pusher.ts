@@ -46,11 +46,9 @@ export function usePusher({ userId, enabled = true }: UsePusherOptions) {
   // Add a pending continuation for a conversation
   const addPendingContinuation = useCallback(
     (continuation: PendingContinuation) => {
-      console.log("[use-pusher] addPendingContinuation called:", continuation);
       setPendingContinuations((prev) => {
         const next = new Map(prev);
         next.set(continuation.conversationId, continuation);
-        console.log("[use-pusher] Updated pendingContinuations map:", Array.from(next.entries()));
         return next;
       });
     },
@@ -77,9 +75,7 @@ export function usePusher({ userId, enabled = true }: UsePusherOptions) {
   // Get a pending continuation for a conversation
   const getPendingContinuation = useCallback(
     (conversationId: string) => {
-      const result = pendingContinuations.get(conversationId);
-      console.log("[use-pusher] getPendingContinuation:", { conversationId, result, mapSize: pendingContinuations.size });
-      return result;
+      return pendingContinuations.get(conversationId);
     },
     [pendingContinuations]
   );
@@ -107,8 +103,6 @@ export function usePusher({ userId, enabled = true }: UsePusherOptions) {
 
   const handleKnowledgeResponse = useCallback(
     (data: KnowledgeResponseEvent) => {
-      console.log("[use-pusher] Received knowledge response:", data);
-      
       const statusText = data.status === "approved" ? "approved" : "denied";
       const toastFn = data.status === "approved" ? toast.success : toast.error;
 
@@ -126,20 +120,10 @@ export function usePusher({ userId, enabled = true }: UsePusherOptions) {
         data.conversationId &&
         data.question
       ) {
-        console.log("[use-pusher] Adding pending continuation:", {
-          conversationId: data.conversationId,
-          question: data.question,
-        });
         addPendingContinuation({
           conversationId: data.conversationId,
           question: data.question,
           approvedAt: data.respondedAt,
-        });
-      } else {
-        console.log("[use-pusher] Not adding pending continuation - missing data:", {
-          status: data.status,
-          conversationId: data.conversationId,
-          question: data.question,
         });
       }
 

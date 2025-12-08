@@ -70,8 +70,6 @@ export function ChatMessage({
 
       {/* Message parts */}
       {message.parts.map((part, partIndex) => {
-        // Debug: log part types to help diagnose issues
-        console.log("[ChatMessage] Part type:", part.type, part);
         switch (part.type) {
           case "text":
             return (
