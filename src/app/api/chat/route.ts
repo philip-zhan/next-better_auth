@@ -106,6 +106,10 @@ export async function POST(req: Request) {
     conversationId?: number;
   } = await req.json();
 
+  console.log("[chat/route] Received request with model:", model);
+  console.log("[chat/route] Message count:", chatMessages.length);
+  console.log("[chat/route] Messages:", JSON.stringify(chatMessages.map(m => ({ role: m.role, partsCount: m.parts?.length }))));
+
   // Get the current user session
   const session = await getSession();
   const userId = session.session.userId;
@@ -140,16 +144,11 @@ export async function POST(req: Request) {
 
   const systemPrompt = `
   You are a helpful AI assistant with access to a knowledge base.
-  When searching for information using the getInformation tool:
-  1. If the answer is found in knowledgeSources, use that information to respond
-  2. If knowledgeSources don't have the answer, but knowledgeSourceSuggestions shows someone who might know:
-    - Call the askForConfirmation tool to ask the user if they want to request knowledge from that person
-    - The tool will display a UI for the user to confirm or decline
-  3. Do NOT mention asking for confirmation in your text response - just call the askForConfirmation tool
-  4. If the askForConfirmation tool returns { confirmed: false }, the user declined the request.
-     Do NOT call askForConfirmation again. Instead, continue the conversation by providing
-     whatever help you can without that knowledge (e.g., suggest where they might find the information,
-     or offer alternative assistance).
+  When using the getInformation tool:
+  1. If the result has requiresConfirmation: true, do NOT output any text. The system will handle the confirmation.
+  2. If the result has requiresConfirmation: false and knowledgeSources has content, use it to respond.
+  3. If the result has requiresConfirmation: false and knowledgeSources is empty, provide helpful alternatives.
+  4. If you see userConfirmed: false in the result, it means the user declined. Provide helpful alternatives.
   `;
 
   const result = streamText({
@@ -175,9 +174,24 @@ export async function POST(req: Request) {
             "[getInformation] knowledgeSourceSuggestions count:",
             knowledgeSourceSuggestions.length
           );
+
+          // If there are suggestions, return them with a flag for the client to show confirmation UI
+          if (knowledgeSourceSuggestions.length > 0) {
+            const suggestion = knowledgeSourceSuggestions[0];
+            return {
+              knowledgeSources: [],
+              requiresConfirmation: true,
+              confirmationData: {
+                ownerName: suggestion.ownerName,
+                embeddingId: suggestion.embeddingId,
+                question: question,
+              },
+            };
+          }
+
           return {
             knowledgeSources,
-            knowledgeSourceSuggestions,
+            requiresConfirmation: false,
           };
         },
       }),
