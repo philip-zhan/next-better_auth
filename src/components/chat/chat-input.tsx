@@ -26,12 +26,12 @@ import { GlobeIcon } from "lucide-react";
 
 const models = [
   {
-    name: "GPT 5.1 Thinking",
-    value: "openai/gpt-5.1-thinking",
-  },
-  {
     name: "GPT 5.1 Instant",
     value: "openai/gpt-5.1-instant",
+  },
+  {
+    name: "GPT 5.1 Thinking",
+    value: "openai/gpt-5.1-thinking",
   },
 ];
 

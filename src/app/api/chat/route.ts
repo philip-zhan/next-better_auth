@@ -96,7 +96,7 @@ async function generateAndSaveEmbeddings(
   }
 }
 
-const DEFAULT_MODEL = "openai/gpt-5.1-thinking";
+const DEFAULT_MODEL = "openai/gpt-5.1-instant";
 
 export async function POST(req: Request) {
   const {
