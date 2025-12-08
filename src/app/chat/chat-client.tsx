@@ -33,6 +33,11 @@ export function ChatClient({
   const { getPendingContinuation, removePendingContinuation } = useRealtime();
   const hasTriggeredContinuation = useRef(false);
 
+  // Sync currentConversationId with prop when it changes (e.g., during navigation)
+  useEffect(() => {
+    setCurrentConversationId(conversationId);
+  }, [conversationId]);
+
   // Custom sendAutomaticallyWhen that handles confirmation flows
   const shouldAutoSend = useMemo(
     () => (options: { messages: UIMessage[] }) => {
