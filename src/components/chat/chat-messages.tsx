@@ -15,12 +15,16 @@ type ChatMessagesProps = {
   messages: UIMessage[];
   status: "ready" | "submitted" | "streaming" | "error";
   onRegenerate: () => void;
+  onToolConfirm?: (toolCallId: string, embeddingId: number, question: string) => void;
+  onToolDecline?: (toolCallId: string) => void;
 };
 
 export function ChatMessages({
   messages,
   status,
   onRegenerate,
+  onToolConfirm,
+  onToolDecline,
 }: ChatMessagesProps) {
   return (
     <Conversation className="min-h-0 flex-1">
@@ -40,6 +44,8 @@ export function ChatMessages({
                 isStreaming={status === "streaming"}
                 isLastMessage={index === messages.length - 1}
                 onRegenerate={onRegenerate}
+                onToolConfirm={onToolConfirm}
+                onToolDecline={onToolDecline}
               />
             ))}
 

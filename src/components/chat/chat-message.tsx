@@ -17,12 +17,18 @@ import {
   ReasoningTrigger,
 } from "@/components/ai-elements/reasoning";
 import { RefreshCcwIcon, CopyIcon } from "lucide-react";
+import {
+  KnowledgeConfirmation,
+  type ConfirmationInput,
+} from "./knowledge-confirmation";
 
 type ChatMessageProps = {
   message: UIMessage;
   isStreaming: boolean;
   isLastMessage: boolean;
   onRegenerate: () => void;
+  onToolConfirm?: (toolCallId: string, embeddingId: number, question: string) => void;
+  onToolDecline?: (toolCallId: string) => void;
 };
 
 export function ChatMessage({
@@ -30,6 +36,8 @@ export function ChatMessage({
   isStreaming,
   isLastMessage,
   onRegenerate,
+  onToolConfirm,
+  onToolDecline,
 }: ChatMessageProps) {
   const sourceParts = message.parts.filter(
     (part) => part.type === "source-url"
@@ -107,6 +115,46 @@ export function ChatMessage({
                 </ReasoningContent>
               </Reasoning>
             );
+
+          // Handle askForConfirmation tool
+          case "tool-askForConfirmation": {
+            const toolPart = part as unknown as {
+              type: "tool-askForConfirmation";
+              toolCallId: string;
+              state: "partial-call" | "call" | "result";
+              input?: ConfirmationInput;
+              output?: { confirmed: boolean; requestSent?: boolean; error?: string };
+            };
+
+            // Don't render while still streaming the tool call
+            if (toolPart.state === "partial-call") {
+              return null;
+            }
+
+            const input = toolPart.input;
+            if (!input) return null;
+
+            const state =
+              toolPart.state === "result" ? "output-available" : "input-available";
+
+            return (
+              <div key={`${message.id}-tool-${partIndex}`} className="my-3 ml-10">
+                <KnowledgeConfirmation
+                  input={input}
+                  state={state}
+                  output={toolPart.output}
+                  onConfirm={() =>
+                    onToolConfirm?.(
+                      toolPart.toolCallId,
+                      input.embeddingId,
+                      input.question
+                    )
+                  }
+                  onDecline={() => onToolDecline?.(toolPart.toolCallId)}
+                />
+              </div>
+            );
+          }
 
           default:
             return null;

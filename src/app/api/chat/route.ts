@@ -13,15 +13,8 @@ import { z } from "zod";
 import { db } from "@/database/db";
 import { conversations } from "@/database/schema/conversations";
 import { messages, messageEmbeddings } from "@/database/schema/messages";
-import {
-  knowledgeRequests,
-  knowledgeShares,
-} from "@/database/schema/knowledge-sharing";
-import { notifications } from "@/database/schema/notifications";
-import { users } from "@/database/schema/auth-schema";
 import { getSession, DEFAULT_ORGANIZATION_ID } from "@/lib/auth";
 import { eq, and } from "drizzle-orm";
-import { triggerKnowledgeRequest } from "@/lib/pusher";
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
@@ -148,11 +141,9 @@ export async function POST(req: Request) {
   When searching for information using the getInformation tool:
   1. If the answer is found in knowledgeSources, use that information to respond
   2. If knowledgeSources don't have the answer, but knowledgeSourceSuggestions shows someone who might know:
-    - Inform the user that a colleague may have relevant knowledge
-    - For example: "[Name] may know about this. Would you like me to ask them?"
-    - Wait for the user's confirmation before calling requestKnowledge
-    - A UI button will appear for the user to click to request the knowledge
-  4. Only call requestKnowledge if the user explicitly confirms (says "yes", "sure", "please ask them", etc.)
+    - Call the askForConfirmation tool to ask the user if they want to request knowledge from that person
+    - The tool will display a UI for the user to confirm or decline
+  3. Do NOT mention asking for confirmation in your text response - just call the askForConfirmation tool
   `;
 
   const result = streamText({
@@ -184,192 +175,21 @@ export async function POST(req: Request) {
           };
         },
       }),
-      requestKnowledge: tool({
-        description: `Request access to knowledge from another organization member. Use this when the user confirms they want to ask someone for knowledge after you've suggested it. Only call this after the user explicitly agrees.`,
+      // Client-side tool that shows confirmation UI - no execute function
+      askForConfirmation: tool({
+        description: `Ask the user for confirmation to request knowledge from another organization member. This will display a UI with the person's name and buttons for the user to confirm or decline.`,
         inputSchema: z.object({
+          ownerName: z
+            .string()
+            .describe("The name of the person who may have the knowledge"),
           embeddingId: z
             .number()
             .describe("The embedding ID of the knowledge to request"),
-          ownerName: z
-            .string()
-            .describe("The name of the knowledge owner for confirmation"),
           question: z
             .string()
-            .describe("The original question that led to this request"),
+            .describe("The original question that led to this suggestion"),
         }),
-        execute: async ({ embeddingId, ownerName, question }) => {
-          console.log("[requestKnowledge] Tool called with:", {
-            embeddingId,
-            ownerName,
-            question,
-            requesterId: userId,
-          });
-
-          try {
-            // Get the embedding and find the owner
-            console.log(
-              "[requestKnowledge] Looking up embedding:",
-              embeddingId
-            );
-            const embeddingData = await db
-              .select({
-                embeddingId: messageEmbeddings.id,
-                ownerId: conversations.userId,
-              })
-              .from(messageEmbeddings)
-              .innerJoin(messages, eq(messageEmbeddings.messageId, messages.id))
-              .innerJoin(
-                conversations,
-                eq(messages.conversationId, conversations.id)
-              )
-              .where(eq(messageEmbeddings.id, embeddingId))
-              .limit(1);
-
-            if (embeddingData.length === 0) {
-              console.log(
-                "[requestKnowledge] Embedding not found:",
-                embeddingId
-              );
-              return {
-                success: false,
-                error: "Knowledge source not found",
-              };
-            }
-
-            const ownerId = embeddingData[0].ownerId;
-            console.log("[requestKnowledge] Found embedding owner:", ownerId);
-
-            // Can't request your own knowledge
-            if (ownerId === userId) {
-              console.log(
-                "[requestKnowledge] User tried to request own knowledge"
-              );
-              return {
-                success: false,
-                error: "This is your own knowledge",
-              };
-            }
-
-            // Check if already shared
-            console.log("[requestKnowledge] Checking if already shared...");
-            const existingShare = await db
-              .select()
-              .from(knowledgeShares)
-              .where(
-                and(
-                  eq(knowledgeShares.embeddingId, embeddingId),
-                  eq(knowledgeShares.sharedWithUserId, userId)
-                )
-              )
-              .limit(1);
-
-            if (existingShare.length > 0) {
-              console.log(
-                "[requestKnowledge] Knowledge already shared with user"
-              );
-              return {
-                success: false,
-                error: "This knowledge is already shared with you",
-              };
-            }
-
-            // Check if pending request already exists
-            console.log("[requestKnowledge] Checking for pending request...");
-            const existingRequest = await db
-              .select()
-              .from(knowledgeRequests)
-              .where(
-                and(
-                  eq(knowledgeRequests.embeddingId, embeddingId),
-                  eq(knowledgeRequests.requesterId, userId),
-                  eq(knowledgeRequests.status, "pending")
-                )
-              )
-              .limit(1);
-
-            if (existingRequest.length > 0) {
-              console.log("[requestKnowledge] Pending request already exists");
-              return {
-                success: false,
-                error: "You already have a pending request for this knowledge",
-              };
-            }
-
-            // Create the knowledge request
-            console.log("[requestKnowledge] Creating new knowledge request...");
-            const [newRequest] = await db
-              .insert(knowledgeRequests)
-              .values({
-                requesterId: userId,
-                ownerId,
-                embeddingId,
-                question,
-                status: "pending",
-              })
-              .returning();
-            console.log("[requestKnowledge] Created request:", newRequest.id);
-
-            // Create notification for the owner
-            console.log(
-              "[requestKnowledge] Creating notification for owner..."
-            );
-            const embeddingContent = await db
-              .select({ content: messageEmbeddings.content })
-              .from(messageEmbeddings)
-              .where(eq(messageEmbeddings.id, embeddingId))
-              .limit(1);
-
-            await db.insert(notifications).values({
-              userId: ownerId,
-              type: "knowledge_request",
-              payload: {
-                requestId: newRequest.id,
-                requesterId: userId,
-                embeddingId,
-                question,
-                chunkContent: embeddingContent[0]?.content || "",
-              },
-            });
-            console.log("[requestKnowledge] Notification created");
-
-            // Get requester info for Pusher event
-            const [requesterInfo] = await db
-              .select({ name: users.name, email: users.email })
-              .from(users)
-              .where(eq(users.id, userId))
-              .limit(1);
-
-            // Trigger realtime notification via Pusher
-            console.log(
-              "[requestKnowledge] Triggering Pusher event for owner:",
-              ownerId
-            );
-            await triggerKnowledgeRequest(ownerId, {
-              requestId: newRequest.id,
-              question,
-              requesterName: requesterInfo?.name || "",
-              requesterEmail: requesterInfo?.email || "",
-              createdAt: new Date().toISOString(),
-            });
-            console.log("[requestKnowledge] Pusher event triggered");
-
-            console.log(
-              "[requestKnowledge] Success! Request ID:",
-              newRequest.id
-            );
-            return {
-              success: true,
-              message: `Knowledge request sent to ${ownerName}. They will be notified and can choose to share their knowledge with you.`,
-              requestId: newRequest.id,
-            };
-          } catch (error) {
-            console.error("[requestKnowledge] Error:", error);
-            return {
-              success: false,
-              error: "Failed to send knowledge request",
-            };
-          }
-        },
+        // No execute function - this is handled client-side
       }),
     },
     onFinish: async ({ text }) => {

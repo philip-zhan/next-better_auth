@@ -26,7 +26,14 @@ export function ChatClient({
     number | null
   >(conversationId);
 
-  const { messages, sendMessage, status, regenerate, setMessages } = useChat({
+  const {
+    messages,
+    sendMessage,
+    status,
+    regenerate,
+    setMessages,
+    addToolResult,
+  } = useChat({
     id: conversationId ? String(conversationId) : undefined,
     messages: initialMessages,
     onFinish: useCallback(
@@ -46,6 +53,54 @@ export function ChatClient({
       [currentConversationId, router]
     ),
   });
+
+  // Handler for knowledge confirmation
+  const handleKnowledgeConfirm = useCallback(
+    async (
+      embeddingId: number,
+      question: string
+    ): Promise<{ requestSent: boolean; error?: string }> => {
+      try {
+        const response = await fetch("/api/knowledge/request", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ embeddingId, question }),
+        });
+
+        if (response.ok) {
+          return { requestSent: true };
+        }
+        const data = await response.json();
+        return { requestSent: false, error: data.error || "Request failed" };
+      } catch {
+        return { requestSent: false, error: "Failed to send request" };
+      }
+    },
+    []
+  );
+
+  const handleToolConfirm = useCallback(
+    async (toolCallId: string, embeddingId: number, question: string) => {
+      const result = await handleKnowledgeConfirm(embeddingId, question);
+      addToolResult({
+        tool: "askForConfirmation",
+        toolCallId,
+        output: { confirmed: true, ...result },
+      });
+    },
+    [addToolResult, handleKnowledgeConfirm]
+  );
+
+  const handleToolDecline = useCallback(
+    (toolCallId: string) => {
+      addToolResult({
+        tool: "askForConfirmation",
+        toolCallId,
+        output: { confirmed: false },
+      });
+    },
+    [addToolResult]
+  );
 
   const handleSubmit = (
     message: PromptInputMessage,
@@ -94,6 +149,8 @@ export function ChatClient({
                 messages={messages}
                 status={status}
                 onRegenerate={regenerate}
+                onToolConfirm={handleToolConfirm}
+                onToolDecline={handleToolDecline}
               />
 
               <ChatInput status={status} onSubmit={handleSubmit} />
