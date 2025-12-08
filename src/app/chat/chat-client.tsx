@@ -198,9 +198,19 @@ export function ChatClient({
     (toolCallId: string) => {
       // Update the tool result with user decline
       updateToolResult(toolCallId, { userConfirmed: false });
-      // AI will continue naturally due to shouldAutoSend allowing declined results
+      
+      // Send a continuation message to tell the AI the user declined
+      // This triggers a new API call with the updated messages
+      sendMessage(
+        { text: "[User declined to request knowledge from that person]" },
+        {
+          body: {
+            conversationId: currentConversationId,
+          },
+        }
+      );
     },
-    [updateToolResult]
+    [updateToolResult, sendMessage, currentConversationId]
   );
 
   const isToolCallPending = useCallback(

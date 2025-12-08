@@ -148,7 +148,10 @@ export async function POST(req: Request) {
   1. If the result has requiresConfirmation: true, do NOT output any text. The system will handle the confirmation.
   2. If the result has requiresConfirmation: false and knowledgeSources has content, use it to respond.
   3. If the result has requiresConfirmation: false and knowledgeSources is empty, provide helpful alternatives.
-  4. If you see userConfirmed: false in the result, it means the user declined. Provide helpful alternatives.
+  
+  If you see a message like "[User declined to request knowledge from that person]", 
+  the user chose not to ask someone else. Respond helpfully by suggesting where they might 
+  find the information themselves (contracts, invoices, CRM, etc.). Do NOT repeat the decline message.
   `;
 
   const result = streamText({
@@ -196,21 +199,21 @@ export async function POST(req: Request) {
         },
       }),
       // Client-side tool that shows confirmation UI - no execute function
-      askForConfirmation: tool({
-        description: `Ask the user for confirmation to request knowledge from another organization member. This will display a UI with the person's name and buttons for the user to confirm or decline.`,
-        inputSchema: z.object({
-          ownerName: z
-            .string()
-            .describe("The name of the person who may have the knowledge"),
-          embeddingId: z
-            .number()
-            .describe("The embedding ID of the knowledge to request"),
-          question: z
-            .string()
-            .describe("The original question that led to this suggestion"),
-        }),
-        // No execute function - this is handled client-side
-      }),
+      // askForConfirmation: tool({
+      //   description: `Ask the user for confirmation to request knowledge from another organization member. This will display a UI with the person's name and buttons for the user to confirm or decline.`,
+      //   inputSchema: z.object({
+      //     ownerName: z
+      //       .string()
+      //       .describe("The name of the person who may have the knowledge"),
+      //     embeddingId: z
+      //       .number()
+      //       .describe("The embedding ID of the knowledge to request"),
+      //     question: z
+      //       .string()
+      //       .describe("The original question that led to this suggestion"),
+      //   }),
+      //   // No execute function - this is handled client-side
+      // }),
     },
     onFinish: async ({ text }) => {
       // Save the assistant message
