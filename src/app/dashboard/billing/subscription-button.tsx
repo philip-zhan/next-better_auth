@@ -32,7 +32,6 @@ export default function SubscriptionButton({
         const loadingToast = toast.loading("Updating subscription...");
 
         const result = await updateExistingSubscription(subId, plan.priceId);
-        console.log({ result });
 
         toast.dismiss(loadingToast);
 
@@ -53,12 +52,10 @@ export default function SubscriptionButton({
         });
 
         if (error) {
-          console.log(error);
           toast.error("Failed to create subscription");
         }
       }
     } catch (err) {
-      console.log(err);
       toast.error("An unexpected error occurred");
     } finally {
       setIsPending(false);

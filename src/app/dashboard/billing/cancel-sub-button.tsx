@@ -26,7 +26,6 @@ export default function CancelSubscription() {
         router.refresh();
       }, 3000);
     } catch (error) {
-      console.log(error);
       toast.error("Failed to cancel subscription");
     } finally {
       setIsPending(false);
