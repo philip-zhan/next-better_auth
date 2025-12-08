@@ -139,7 +139,7 @@ export function ChatClient({
   // Reset the continuation flag when conversation changes
   useEffect(() => {
     hasTriggeredContinuation.current = false;
-  }, [conversationId]);
+  }, []);
 
   // Handler for knowledge confirmation
   const handleKnowledgeConfirm = useCallback(

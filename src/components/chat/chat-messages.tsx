@@ -15,13 +15,25 @@ type ChatMessagesProps = {
   messages: UIMessage[];
   status: "ready" | "submitted" | "streaming" | "error";
   onRegenerate: () => void;
-  onToolConfirm?: (toolCallId: string, embeddingId: number, question: string, ownerName: string) => void;
+  onToolConfirm?: (
+    toolCallId: string,
+    embeddingId: number,
+    question: string,
+    ownerName: string
+  ) => void;
   onToolDecline?: (toolCallId: string) => void;
   isToolCallPending?: (toolCallId: string) => boolean;
 };
 
 // Hidden system messages that shouldn't be displayed
-const HIDDEN_MESSAGES = ["[User declined to request knowledge from that person]"];
+const HIDDEN_MESSAGE_PATTERNS = [
+  /^\[User declined to request knowledge from that person\]$/,
+  /^\[Knowledge request approved - please search again and answer my original question: ".*"\]$/,
+];
+
+function isHiddenMessage(text: string): boolean {
+  return HIDDEN_MESSAGE_PATTERNS.some((pattern) => pattern.test(text));
+}
 
 export function ChatMessages({
   messages,
@@ -35,7 +47,7 @@ export function ChatMessages({
   const visibleMessages = messages.filter((msg) => {
     const textPart = msg.parts.find((p) => p.type === "text");
     if (textPart && "text" in textPart) {
-      return !HIDDEN_MESSAGES.includes(textPart.text);
+      return !isHiddenMessage(textPart.text);
     }
     return true;
   });
