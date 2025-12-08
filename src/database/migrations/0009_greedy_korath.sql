@@ -1,14 +1,14 @@
 -- Add column as nullable first
 ALTER TABLE "conversations" ADD COLUMN "public_id" text;--> statement-breakpoint
 -- Generate nanoid-like strings for existing rows (21 characters, URL-safe)
--- Using a combination of random() and encode() to create a random string
-UPDATE "conversations" SET "public_id" = encode(gen_random_bytes(16), 'base64')
-WHERE "public_id" IS NULL;--> statement-breakpoint
--- Replace URL-unsafe characters and trim to 21 chars (nanoid default length)
+-- Using md5 hash of random() + id + timestamp to create unique strings
+-- md5 produces 32 hex characters, we'll take first 21 which are URL-safe
+-- For better uniqueness, we'll use a combination that includes the row id
 UPDATE "conversations" SET "public_id" = substring(
-  translate("public_id", '/+', '_-'),
+  md5(random()::text || id::text || clock_timestamp()::text),
   1, 21
-) WHERE "public_id" IS NOT NULL;--> statement-breakpoint
+)
+WHERE "public_id" IS NULL;--> statement-breakpoint
 -- Make column NOT NULL
 ALTER TABLE "conversations" ALTER COLUMN "public_id" SET NOT NULL;--> statement-breakpoint
 -- Add unique constraint
