@@ -32,9 +32,9 @@ import { useRealtime } from "@/components/realtime-provider";
 
 type ChatSidebarProps = {
   conversations: ConversationItem[];
-  currentConversationId: number | null;
+  currentConversationId: string | null;
   onNewChat: () => void;
-  onSelectConversation: (id: number) => void;
+  onSelectConversation: (publicId: string) => void;
 };
 
 // Helper function to group conversations by time
@@ -147,12 +147,12 @@ export function ChatSidebar({
                 <SidebarGroupContent>
                   <SidebarMenu>
                     {group.conversations.map((conv) => {
-                      const hasPending = hasPendingContinuation(conv.id);
+                      const hasPending = hasPendingContinuation(conv.publicId);
                       return (
-                        <SidebarMenuItem key={conv.id}>
+                        <SidebarMenuItem key={conv.publicId}>
                           <SidebarMenuButton
-                            onClick={() => onSelectConversation(conv.id)}
-                            isActive={currentConversationId === conv.id}
+                            onClick={() => onSelectConversation(conv.publicId)}
+                            isActive={currentConversationId === conv.publicId}
                             className="w-full justify-start"
                           >
                             {hasPending ? (

@@ -8,12 +8,12 @@ import {
 } from "@/hooks/use-pusher";
 
 interface RealtimeContextValue {
-  pendingContinuations: Map<number, PendingContinuation>;
-  hasPendingContinuation: (conversationId: number) => boolean;
+  pendingContinuations: Map<string, PendingContinuation>;
+  hasPendingContinuation: (conversationId: string) => boolean;
   getPendingContinuation: (
-    conversationId: number
+    conversationId: string
   ) => PendingContinuation | undefined;
-  removePendingContinuation: (conversationId: number) => void;
+  removePendingContinuation: (conversationId: string) => void;
 }
 
 const RealtimeContext = createContext<RealtimeContextValue | null>(null);

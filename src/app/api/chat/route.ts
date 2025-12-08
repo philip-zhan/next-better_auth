@@ -10,6 +10,7 @@ import {
   generateEmbeddings,
 } from "@/lib/embedding";
 import { z } from "zod";
+import { nanoid } from "nanoid";
 import { db } from "@/database/db";
 import { conversations } from "@/database/schema/conversations";
 import { messages, messageEmbeddings } from "@/database/schema/messages";
@@ -22,40 +23,42 @@ export const maxDuration = 30;
 async function getOrCreateConversation(
   userId: string,
   organizationId: string | null,
-  conversationId: number | null,
+  publicId: string | null,
   firstMessage: string
-): Promise<number> {
-  if (conversationId) {
+): Promise<{ id: number; publicId: string }> {
+  if (publicId) {
     // Verify the conversation belongs to this user
     const existing = await db
       .select()
       .from(conversations)
       .where(
         and(
-          eq(conversations.id, conversationId),
+          eq(conversations.publicId, publicId),
           eq(conversations.userId, userId)
         )
       )
       .limit(1);
 
     if (existing.length > 0) {
-      return conversationId;
+      return { id: existing[0].id, publicId: existing[0].publicId };
     }
   }
 
   // Create a new conversation with auto-generated title from first message
   const title =
     firstMessage.slice(0, 50) + (firstMessage.length > 50 ? "..." : "");
+  const newPublicId = publicId || nanoid();
   const [newConversation] = await db
     .insert(conversations)
     .values({
       userId,
       organizationId,
       title,
+      publicId: newPublicId,
     })
-    .returning({ id: conversations.id });
+    .returning({ id: conversations.id, publicId: conversations.publicId });
 
-  return newConversation.id;
+  return { id: newConversation.id, publicId: newConversation.publicId };
 }
 
 async function saveMessage(
@@ -100,10 +103,12 @@ export async function POST(req: Request) {
     messages: chatMessages,
     model = DEFAULT_MODEL,
     conversationId,
+    publicId,
   }: {
     messages: UIMessage[];
     model?: string;
-    conversationId?: number;
+    conversationId?: number; // Legacy support
+    publicId?: string;
   } = await req.json();
 
   console.log("[chat/route] Received request with model:", model);
@@ -122,13 +127,32 @@ export async function POST(req: Request) {
   const userContent =
     latestUserMessage?.parts?.find((p) => p.type === "text")?.text || "";
 
-  // Get or create conversation
-  const activeConversationId = await getOrCreateConversation(
+  // Get or create conversation (use publicId if provided, fallback to conversationId for legacy support)
+  // For legacy support: if conversationId is provided but no publicId, we need to look it up
+  let finalPublicId = publicId ?? null;
+  if (!finalPublicId && conversationId) {
+    const [legacyConv] = await db
+      .select({ publicId: conversations.publicId })
+      .from(conversations)
+      .where(
+        and(
+          eq(conversations.id, conversationId),
+          eq(conversations.userId, userId)
+        )
+      )
+      .limit(1);
+    if (legacyConv) {
+      finalPublicId = legacyConv.publicId;
+    }
+  }
+  
+  const conversation = await getOrCreateConversation(
     userId,
     organizationId,
-    conversationId ?? null,
+    finalPublicId,
     userContent
   );
+  const activeConversationId = conversation.id;
 
   // Save the user message and generate embeddings
   const savedUserMessageId = await saveMessage(
@@ -223,14 +247,14 @@ export async function POST(req: Request) {
     },
   });
 
-  // Return the stream response with the conversation ID in message metadata
+  // Return the stream response with the conversation publicId in message metadata
   return result.toUIMessageStreamResponse({
     sendSources: true,
     sendReasoning: true,
     messageMetadata: ({ part }) => {
-      // Include conversation ID in the message start metadata
+      // Include conversation publicId in the message start metadata
       if (part.type === "start") {
-        return { conversationId: activeConversationId };
+        return { conversationId: conversation.publicId };
       }
       return undefined;
     },

@@ -5,6 +5,7 @@ import { useChat, type UIMessage } from "@ai-sdk/react";
 import { lastAssistantMessageIsCompleteWithToolCalls } from "ai";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { useRouter } from "next/navigation";
+import { nanoid } from "nanoid";
 import type { PromptInputMessage } from "@/components/ai-elements/prompt-input";
 import { ChatSidebar } from "../../components/chat/chat-sidebar";
 import { ChatMessages } from "../../components/chat/chat-messages";
@@ -15,7 +16,7 @@ import { useRealtime } from "@/components/realtime-provider";
 type ChatClientProps = {
   conversations: ConversationItem[];
   initialMessages: UIMessage[];
-  conversationId: number | null;
+  conversationId: string | null;
 };
 
 export function ChatClient({
@@ -25,7 +26,7 @@ export function ChatClient({
 }: ChatClientProps) {
   const router = useRouter();
   const [currentConversationId, setCurrentConversationId] = useState<
-    number | null
+    string | null
   >(conversationId);
   const [pendingToolCalls, setPendingToolCalls] = useState<Set<string>>(
     new Set()
@@ -86,15 +87,15 @@ export function ChatClient({
   );
 
   const { messages, sendMessage, status, regenerate, setMessages } = useChat({
-    id: conversationId ? String(conversationId) : undefined,
+    id: conversationId || undefined,
     messages: initialMessages,
     // Automatically send when all tool results are available, except for askForConfirmation
     sendAutomaticallyWhen: shouldAutoSend,
     onFinish: useCallback(
       (options: { message: UIMessage }) => {
-        // Extract conversation ID from message metadata
+        // Extract conversation publicId from message metadata
         const metadata = options.message.metadata as
-          | { conversationId?: number }
+          | { conversationId?: string }
           | undefined;
         const newConversationId = metadata?.conversationId;
 
@@ -135,7 +136,7 @@ export function ChatClient({
         },
         {
           body: {
-            conversationId: currentConversationId,
+            publicId: currentConversationId,
           },
         }
       );
@@ -170,7 +171,7 @@ export function ChatClient({
           body: JSON.stringify({
             embeddingId,
             question,
-            conversationId: currentConversationId,
+            publicId: currentConversationId,
           }),
         });
 
@@ -220,7 +221,7 @@ export function ChatClient({
       toolCallId: string,
       embeddingId: number,
       question: string,
-      ownerName: string
+      _ownerName: string
     ) => {
       setPendingToolCalls((prev) => new Set(prev).add(toolCallId));
       const result = await handleKnowledgeConfirm(embeddingId, question);
@@ -269,7 +270,7 @@ export function ChatClient({
         { text: "[User declined to request knowledge from that person]" },
         {
           body: {
-            conversationId: currentConversationId,
+            publicId: currentConversationId,
           },
         }
       );
@@ -287,6 +288,15 @@ export function ChatClient({
     model: string,
     webSearch: boolean
   ) => {
+    // Generate publicId if starting a new conversation
+    const publicId = currentConversationId || nanoid();
+    
+    // Navigate immediately if starting a new conversation
+    if (!currentConversationId) {
+      setCurrentConversationId(publicId);
+      router.push(`/chat?c=${publicId}`);
+    }
+
     sendMessage(
       {
         text: message.text || "Sent with attachments",
@@ -296,7 +306,7 @@ export function ChatClient({
         body: {
           model: model,
           webSearch: webSearch,
-          conversationId: currentConversationId,
+          publicId: publicId,
         },
       }
     );
@@ -308,8 +318,8 @@ export function ChatClient({
     router.push("/chat");
   };
 
-  const handleSelectConversation = (id: number) => {
-    router.push(`/chat?c=${id}`);
+  const handleSelectConversation = (publicId: string) => {
+    router.push(`/chat?c=${publicId}`);
   };
 
   return (

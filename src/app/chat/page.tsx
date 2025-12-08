@@ -12,6 +12,7 @@ async function getConversations(userId: string) {
   return db
     .select({
       id: conversations.id,
+      publicId: conversations.publicId,
       title: conversations.title,
       createdAt: conversations.createdAt,
       updatedAt: conversations.updatedAt,
@@ -21,14 +22,14 @@ async function getConversations(userId: string) {
     .orderBy(desc(conversations.updatedAt));
 }
 
-async function getConversationMessages(conversationId: number, userId: string) {
+async function getConversationMessages(publicId: string, userId: string) {
   // First verify the conversation belongs to this user
   const conversation = await db
     .select()
     .from(conversations)
     .where(
       and(
-        eq(conversations.id, conversationId),
+        eq(conversations.publicId, publicId),
         eq(conversations.userId, userId)
       )
     )
@@ -37,6 +38,8 @@ async function getConversationMessages(conversationId: number, userId: string) {
   if (conversation.length === 0) {
     return null;
   }
+
+  const conversationId = conversation[0].id;
 
   const dbMessages = await db
     .select({
@@ -71,18 +74,18 @@ export default async function ChatPage({
   // Fetch all conversations for this user
   const userConversations = await getConversations(userId);
 
-  // Get conversation ID from URL params
-  const conversationId = params.c ? Number.parseInt(params.c, 10) : null;
+  // Get conversation publicId from URL params
+  const publicId = params.c || null;
 
-  // Fetch messages if we have a valid conversation ID
+  // Fetch messages if we have a valid conversation publicId
   let initialMessages: UIMessage[] = [];
-  let validConversationId: number | null = conversationId;
+  let validPublicId: string | null = publicId;
   
-  if (conversationId) {
-    const messages = await getConversationMessages(conversationId, userId);
+  if (publicId) {
+    const messages = await getConversationMessages(publicId, userId);
     if (messages === null) {
       // Conversation doesn't exist or doesn't belong to user, show new chat
-      validConversationId = null;
+      validPublicId = null;
     } else {
       initialMessages = messages;
     }
@@ -92,7 +95,7 @@ export default async function ChatPage({
     <ChatClient
       conversations={userConversations}
       initialMessages={initialMessages}
-      conversationId={validConversationId}
+      conversationId={validPublicId}
     />
   );
 }

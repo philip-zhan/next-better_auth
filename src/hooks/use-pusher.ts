@@ -18,7 +18,7 @@ interface UsePusherOptions {
 
 // Pending continuation info for auto-continuing after knowledge approval
 export interface PendingContinuation {
-  conversationId: number;
+  conversationId: string; // publicId
   question: string;
   approvedAt: string;
 }
@@ -40,7 +40,7 @@ export function usePusher({ userId, enabled = true }: UsePusherOptions) {
   const queryClient = useQueryClient();
   const channelRef = useRef<Channel | null>(null);
   const [pendingContinuations, setPendingContinuations] = useState<
-    Map<number, PendingContinuation>
+    Map<string, PendingContinuation>
   >(new Map());
 
   // Add a pending continuation for a conversation
@@ -58,7 +58,7 @@ export function usePusher({ userId, enabled = true }: UsePusherOptions) {
   );
 
   // Remove a pending continuation (after it's been processed)
-  const removePendingContinuation = useCallback((conversationId: number) => {
+  const removePendingContinuation = useCallback((conversationId: string) => {
     setPendingContinuations((prev) => {
       const next = new Map(prev);
       next.delete(conversationId);
@@ -68,7 +68,7 @@ export function usePusher({ userId, enabled = true }: UsePusherOptions) {
 
   // Check if a conversation has a pending continuation
   const hasPendingContinuation = useCallback(
-    (conversationId: number) => {
+    (conversationId: string) => {
       return pendingContinuations.has(conversationId);
     },
     [pendingContinuations]
@@ -76,7 +76,7 @@ export function usePusher({ userId, enabled = true }: UsePusherOptions) {
 
   // Get a pending continuation for a conversation
   const getPendingContinuation = useCallback(
-    (conversationId: number) => {
+    (conversationId: string) => {
       const result = pendingContinuations.get(conversationId);
       console.log("[use-pusher] getPendingContinuation:", { conversationId, result, mapSize: pendingContinuations.size });
       return result;

@@ -36,7 +36,7 @@ export interface KnowledgeResponseEvent {
   status: "approved" | "denied";
   responseContent?: string;
   respondedAt: string;
-  conversationId?: number;
+  conversationId?: string; // publicId
   question?: string;
 }
 

@@ -4,6 +4,7 @@ import {
   knowledgeRequests,
   knowledgeShares,
 } from "@/database/schema/knowledge-sharing";
+import { conversations } from "@/database/schema/conversations";
 import { notifications } from "@/database/schema/notifications";
 import { getSession } from "@/lib/auth";
 import { eq, and } from "drizzle-orm";
@@ -75,13 +76,26 @@ export async function POST(req: Request) {
         },
       });
 
+      // Convert internal conversationId to publicId if present
+      let conversationPublicId: string | undefined;
+      if (request.conversationId) {
+        const [conversation] = await db
+          .select({ publicId: conversations.publicId })
+          .from(conversations)
+          .where(eq(conversations.id, request.conversationId))
+          .limit(1);
+        if (conversation) {
+          conversationPublicId = conversation.publicId;
+        }
+      }
+
       // Trigger realtime notification via Pusher (only on approval)
       await triggerKnowledgeResponse(request.requesterId, {
         requestId,
         status: "approved",
         responseContent: responseContent || undefined,
         respondedAt: new Date().toISOString(),
-        conversationId: request.conversationId ?? undefined,
+        conversationId: conversationPublicId,
         question: request.question,
       });
     }

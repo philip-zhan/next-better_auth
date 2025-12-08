@@ -16,7 +16,8 @@ import { triggerKnowledgeRequest } from "@/lib/pusher";
 const requestSchema = z.object({
   embeddingId: z.number(),
   question: z.string().min(1),
-  conversationId: z.number().optional(),
+  conversationId: z.number().optional(), // Legacy support
+  publicId: z.string().optional(),
 });
 
 export async function POST(req: Request) {
@@ -25,7 +26,20 @@ export async function POST(req: Request) {
     const requesterId = session.session.userId;
 
     const body = await req.json();
-    const { embeddingId, question, conversationId } = requestSchema.parse(body);
+    const { embeddingId, question, conversationId, publicId } = requestSchema.parse(body);
+
+    // Convert publicId to internal conversationId if provided
+    let internalConversationId: number | null = conversationId ?? null;
+    if (publicId && !internalConversationId) {
+      const [conversation] = await db
+        .select({ id: conversations.id })
+        .from(conversations)
+        .where(eq(conversations.publicId, publicId))
+        .limit(1);
+      if (conversation) {
+        internalConversationId = conversation.id;
+      }
+    }
 
     // Get the embedding and find the owner
     const embeddingData = await db
@@ -106,7 +120,7 @@ export async function POST(req: Request) {
         requesterId,
         ownerId,
         embeddingId,
-        conversationId: conversationId ?? null,
+        conversationId: internalConversationId,
         question,
         status: "pending",
       })
