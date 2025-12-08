@@ -1,7 +1,7 @@
 import { embed, embedMany } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { db } from "@/database/db";
-import { cosineDistance, asc, lt, sql, eq, and, isNull } from "drizzle-orm";
+import { cosineDistance, asc, lt, sql, eq, and, isNull, gt } from "drizzle-orm";
 import { embeddings } from "@/database/schema/embeddings";
 import { resources } from "@/database/schema/resources";
 import { getOrganizationId, getUserId } from "./auth";
@@ -85,11 +85,12 @@ export type KnowledgeSourceSuggestion = {
 export const findUserOwnEmbeddings = async (
   userQuery: string,
   userId: string,
-  limit = 4,
-  similarityThreshold = 0.5
+  limit: number,
+  distanceLowerBound: number,
+  distanceUpperBound: number
 ): Promise<KnowledgeSource[]> => {
   const userQueryEmbedded = await generateEmbedding(userQuery);
-  const similarity = sql<number>`${cosineDistance(
+  const distance = sql<number>`${cosineDistance(
     messageEmbeddings.embedding,
     userQueryEmbedded
   )}`;
@@ -100,16 +101,20 @@ export const findUserOwnEmbeddings = async (
       embeddingContent: messageEmbeddings.content,
       ownerId: conversations.userId,
       ownerName: users.name,
-      similarity,
+      distance,
     })
     .from(messageEmbeddings)
     .innerJoin(messages, eq(messageEmbeddings.messageId, messages.id))
     .innerJoin(conversations, eq(messages.conversationId, conversations.id))
     .innerJoin(users, eq(conversations.userId, users.id))
     .where(
-      and(eq(conversations.userId, userId), lt(similarity, similarityThreshold))
+      and(
+        eq(conversations.userId, userId),
+        gt(distance, distanceLowerBound),
+        lt(distance, distanceUpperBound)
+      )
     )
-    .orderBy(asc(similarity))
+    .orderBy(asc(distance))
     .limit(limit);
 
   console.log(
@@ -117,7 +122,7 @@ export const findUserOwnEmbeddings = async (
     results.map((r) => ({
       embeddingId: r.embeddingId,
       ownerName: r.ownerName,
-      similarity: r.similarity,
+      distance: r.distance,
     }))
   );
 
@@ -132,11 +137,12 @@ export const findUserOwnEmbeddings = async (
 export const findSharedEmbeddings = async (
   userQuery: string,
   userId: string,
-  limit = 4,
-  similarityThreshold = 0.5
+  limit: number,
+  distanceLowerBound: number,
+  distanceUpperBound: number
 ): Promise<KnowledgeSource[]> => {
   const userQueryEmbedded = await generateEmbedding(userQuery);
-  const similarity = sql<number>`${cosineDistance(
+  const distance = sql<number>`${cosineDistance(
     messageEmbeddings.embedding,
     userQueryEmbedded
   )}`;
@@ -147,7 +153,7 @@ export const findSharedEmbeddings = async (
       embeddingContent: messageEmbeddings.content,
       ownerId: knowledgeShares.ownerId,
       ownerName: users.name,
-      similarity,
+      distance,
     })
     .from(knowledgeShares)
     .innerJoin(
@@ -159,10 +165,11 @@ export const findSharedEmbeddings = async (
     .where(
       and(
         eq(knowledgeShares.sharedWithUserId, userId),
-        lt(similarity, similarityThreshold)
+        gt(distance, distanceLowerBound),
+        lt(distance, distanceUpperBound)
       )
     )
-    .orderBy(asc(similarity))
+    .orderBy(asc(distance))
     .limit(limit);
 
   console.log(
@@ -170,7 +177,7 @@ export const findSharedEmbeddings = async (
     results.map((r) => ({
       embeddingId: r.embeddingId,
       ownerName: r.ownerName,
-      similarity: r.similarity,
+      distance: r.distance,
     }))
   );
 
@@ -187,11 +194,12 @@ export const findOrgMembersEmbeddings = async (
   userId: string,
   organizationId: string,
   excludeEmbeddingIds: number[],
-  limit = 4,
-  similarityThreshold = 0.5
+  limit: number,
+  distanceLowerBound: number,
+  distanceUpperBound: number
 ): Promise<KnowledgeSourceSuggestion[]> => {
   const userQueryEmbedded = await generateEmbedding(userQuery);
-  const similarity = sql<number>`${cosineDistance(
+  const distance = sql<number>`${cosineDistance(
     messageEmbeddings.embedding,
     userQueryEmbedded
   )}`;
@@ -238,11 +246,12 @@ export const findOrgMembersEmbeddings = async (
           memberIds.map((id) => sql`${id}`),
           sql`, `
         )})`,
-        lt(similarity, similarityThreshold),
+        gt(distance, distanceLowerBound),
+        lt(distance, distanceUpperBound),
         excludeCondition
       )
     )
-    .orderBy(asc(similarity))
+    .orderBy(asc(distance))
     .limit(limit);
 
   console.log(
@@ -263,7 +272,8 @@ export const findOrgMembersEmbeddings = async (
 // Enhanced search that combines all phases
 export const findEnhancedRelevantContent = async (
   userQuery: string,
-  similarityThreshold = 0.5
+  distanceLowerBound = 0.01, // exclude content that's too similar to the user query
+  distanceUpperBound = 0.5
 ): Promise<{
   knowledgeSources: KnowledgeSource[];
   knowledgeSourceSuggestions: KnowledgeSourceSuggestion[];
@@ -279,7 +289,8 @@ export const findEnhancedRelevantContent = async (
     userQuery,
     userId,
     4,
-    similarityThreshold
+    distanceLowerBound,
+    distanceUpperBound
   );
 
   // Phase 2: Search shared embeddings
@@ -287,7 +298,8 @@ export const findEnhancedRelevantContent = async (
     userQuery,
     userId,
     4,
-    similarityThreshold
+    distanceLowerBound,
+    distanceUpperBound
   );
 
   // Phase 3: Search other org members' embeddings
@@ -301,7 +313,8 @@ export const findEnhancedRelevantContent = async (
     organizationId,
     excludeIds,
     2,
-    similarityThreshold
+    distanceLowerBound,
+    distanceUpperBound
   );
 
   return {
