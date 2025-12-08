@@ -10,18 +10,12 @@ import {
   generateEmbeddings,
 } from "@/lib/embedding";
 import { z } from "zod";
+import { nanoid } from "nanoid";
 import { db } from "@/database/db";
 import { conversations } from "@/database/schema/conversations";
 import { messages, messageEmbeddings } from "@/database/schema/messages";
-import {
-  knowledgeRequests,
-  knowledgeShares,
-} from "@/database/schema/knowledge-sharing";
-import { notifications } from "@/database/schema/notifications";
-import { users } from "@/database/schema/auth-schema";
 import { getSession, DEFAULT_ORGANIZATION_ID } from "@/lib/auth";
 import { eq, and } from "drizzle-orm";
-import { triggerKnowledgeRequest } from "@/lib/pusher";
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
@@ -29,40 +23,42 @@ export const maxDuration = 30;
 async function getOrCreateConversation(
   userId: string,
   organizationId: string | null,
-  conversationId: number | null,
+  publicId: string | null,
   firstMessage: string
-): Promise<number> {
-  if (conversationId) {
+): Promise<{ id: number; publicId: string }> {
+  if (publicId) {
     // Verify the conversation belongs to this user
     const existing = await db
       .select()
       .from(conversations)
       .where(
         and(
-          eq(conversations.id, conversationId),
+          eq(conversations.publicId, publicId),
           eq(conversations.userId, userId)
         )
       )
       .limit(1);
 
     if (existing.length > 0) {
-      return conversationId;
+      return { id: existing[0].id, publicId: existing[0].publicId };
     }
   }
 
   // Create a new conversation with auto-generated title from first message
   const title =
     firstMessage.slice(0, 50) + (firstMessage.length > 50 ? "..." : "");
+  const newPublicId = publicId || nanoid();
   const [newConversation] = await db
     .insert(conversations)
     .values({
       userId,
       organizationId,
       title,
+      publicId: newPublicId,
     })
-    .returning({ id: conversations.id });
+    .returning({ id: conversations.id, publicId: conversations.publicId });
 
-  return newConversation.id;
+  return { id: newConversation.id, publicId: newConversation.publicId };
 }
 
 async function saveMessage(
@@ -100,16 +96,24 @@ async function generateAndSaveEmbeddings(
   }
 }
 
+const DEFAULT_MODEL = "openai/gpt-5.1-thinking";
+
 export async function POST(req: Request) {
   const {
     messages: chatMessages,
-    model,
+    model = DEFAULT_MODEL,
     conversationId,
+    publicId,
   }: {
     messages: UIMessage[];
-    model: string;
-    conversationId?: number;
+    model?: string;
+    conversationId?: number; // Legacy support
+    publicId?: string;
   } = await req.json();
+
+  console.log("[chat/route] Received request with model:", model);
+  console.log("[chat/route] Message count:", chatMessages.length);
+  console.log("[chat/route] Messages:", JSON.stringify(chatMessages.map(m => ({ role: m.role, partsCount: m.parts?.length }))));
 
   // Get the current user session
   const session = await getSession();
@@ -123,13 +127,32 @@ export async function POST(req: Request) {
   const userContent =
     latestUserMessage?.parts?.find((p) => p.type === "text")?.text || "";
 
-  // Get or create conversation
-  const activeConversationId = await getOrCreateConversation(
+  // Get or create conversation (use publicId if provided, fallback to conversationId for legacy support)
+  // For legacy support: if conversationId is provided but no publicId, we need to look it up
+  let finalPublicId = publicId ?? null;
+  if (!finalPublicId && conversationId) {
+    const [legacyConv] = await db
+      .select({ publicId: conversations.publicId })
+      .from(conversations)
+      .where(
+        and(
+          eq(conversations.id, conversationId),
+          eq(conversations.userId, userId)
+        )
+      )
+      .limit(1);
+    if (legacyConv) {
+      finalPublicId = legacyConv.publicId;
+    }
+  }
+  
+  const conversation = await getOrCreateConversation(
     userId,
     organizationId,
-    conversationId ?? null,
+    finalPublicId,
     userContent
   );
+  const activeConversationId = conversation.id;
 
   // Save the user message and generate embeddings
   const savedUserMessageId = await saveMessage(
@@ -145,14 +168,14 @@ export async function POST(req: Request) {
 
   const systemPrompt = `
   You are a helpful AI assistant with access to a knowledge base.
-  When searching for information using the getInformation tool:
-  1. If the answer is found in knowledgeSources, use that information to respond
-  2. If knowledgeSources don't have the answer, but knowledgeSourceSuggestions shows someone who might know:
-    - Inform the user that a colleague may have relevant knowledge
-    - For example: "[Name] may know about this. Would you like me to ask them?"
-    - Wait for the user's confirmation before calling requestKnowledge
-    - A UI button will appear for the user to click to request the knowledge
-  4. Only call requestKnowledge if the user explicitly confirms (says "yes", "sure", "please ask them", etc.)
+  When using the getInformation tool:
+  1. If the result has requiresConfirmation: true, do NOT output any text. The system will handle the confirmation.
+  2. If the result has requiresConfirmation: false and knowledgeSources has content, use it to respond.
+  3. If the result has requiresConfirmation: false and knowledgeSources is empty, provide helpful alternatives.
+  
+  If you see a message like "[User declined to request knowledge from that person]", 
+  the user chose not to ask someone else. Respond helpfully by suggesting where they might 
+  find the information themselves (contracts, invoices, CRM, etc.). Do NOT repeat the decline message.
   `;
 
   const result = streamText({
@@ -178,199 +201,43 @@ export async function POST(req: Request) {
             "[getInformation] knowledgeSourceSuggestions count:",
             knowledgeSourceSuggestions.length
           );
+
+          // If there are suggestions, return them with a flag for the client to show confirmation UI
+          if (knowledgeSourceSuggestions.length > 0) {
+            const suggestion = knowledgeSourceSuggestions[0];
+            return {
+              knowledgeSources: [],
+              requiresConfirmation: true,
+              confirmationData: {
+                ownerName: suggestion.ownerName,
+                embeddingId: suggestion.embeddingId,
+                question: question,
+              },
+            };
+          }
+
           return {
             knowledgeSources,
-            knowledgeSourceSuggestions,
+            requiresConfirmation: false,
           };
         },
       }),
-      requestKnowledge: tool({
-        description: `Request access to knowledge from another organization member. Use this when the user confirms they want to ask someone for knowledge after you've suggested it. Only call this after the user explicitly agrees.`,
-        inputSchema: z.object({
-          embeddingId: z
-            .number()
-            .describe("The embedding ID of the knowledge to request"),
-          ownerName: z
-            .string()
-            .describe("The name of the knowledge owner for confirmation"),
-          question: z
-            .string()
-            .describe("The original question that led to this request"),
-        }),
-        execute: async ({ embeddingId, ownerName, question }) => {
-          console.log("[requestKnowledge] Tool called with:", {
-            embeddingId,
-            ownerName,
-            question,
-            requesterId: userId,
-          });
-
-          try {
-            // Get the embedding and find the owner
-            console.log(
-              "[requestKnowledge] Looking up embedding:",
-              embeddingId
-            );
-            const embeddingData = await db
-              .select({
-                embeddingId: messageEmbeddings.id,
-                ownerId: conversations.userId,
-              })
-              .from(messageEmbeddings)
-              .innerJoin(messages, eq(messageEmbeddings.messageId, messages.id))
-              .innerJoin(
-                conversations,
-                eq(messages.conversationId, conversations.id)
-              )
-              .where(eq(messageEmbeddings.id, embeddingId))
-              .limit(1);
-
-            if (embeddingData.length === 0) {
-              console.log(
-                "[requestKnowledge] Embedding not found:",
-                embeddingId
-              );
-              return {
-                success: false,
-                error: "Knowledge source not found",
-              };
-            }
-
-            const ownerId = embeddingData[0].ownerId;
-            console.log("[requestKnowledge] Found embedding owner:", ownerId);
-
-            // Can't request your own knowledge
-            if (ownerId === userId) {
-              console.log(
-                "[requestKnowledge] User tried to request own knowledge"
-              );
-              return {
-                success: false,
-                error: "This is your own knowledge",
-              };
-            }
-
-            // Check if already shared
-            console.log("[requestKnowledge] Checking if already shared...");
-            const existingShare = await db
-              .select()
-              .from(knowledgeShares)
-              .where(
-                and(
-                  eq(knowledgeShares.embeddingId, embeddingId),
-                  eq(knowledgeShares.sharedWithUserId, userId)
-                )
-              )
-              .limit(1);
-
-            if (existingShare.length > 0) {
-              console.log(
-                "[requestKnowledge] Knowledge already shared with user"
-              );
-              return {
-                success: false,
-                error: "This knowledge is already shared with you",
-              };
-            }
-
-            // Check if pending request already exists
-            console.log("[requestKnowledge] Checking for pending request...");
-            const existingRequest = await db
-              .select()
-              .from(knowledgeRequests)
-              .where(
-                and(
-                  eq(knowledgeRequests.embeddingId, embeddingId),
-                  eq(knowledgeRequests.requesterId, userId),
-                  eq(knowledgeRequests.status, "pending")
-                )
-              )
-              .limit(1);
-
-            if (existingRequest.length > 0) {
-              console.log("[requestKnowledge] Pending request already exists");
-              return {
-                success: false,
-                error: "You already have a pending request for this knowledge",
-              };
-            }
-
-            // Create the knowledge request
-            console.log("[requestKnowledge] Creating new knowledge request...");
-            const [newRequest] = await db
-              .insert(knowledgeRequests)
-              .values({
-                requesterId: userId,
-                ownerId,
-                embeddingId,
-                question,
-                status: "pending",
-              })
-              .returning();
-            console.log("[requestKnowledge] Created request:", newRequest.id);
-
-            // Create notification for the owner
-            console.log(
-              "[requestKnowledge] Creating notification for owner..."
-            );
-            const embeddingContent = await db
-              .select({ content: messageEmbeddings.content })
-              .from(messageEmbeddings)
-              .where(eq(messageEmbeddings.id, embeddingId))
-              .limit(1);
-
-            await db.insert(notifications).values({
-              userId: ownerId,
-              type: "knowledge_request",
-              payload: {
-                requestId: newRequest.id,
-                requesterId: userId,
-                embeddingId,
-                question,
-                chunkContent: embeddingContent[0]?.content || "",
-              },
-            });
-            console.log("[requestKnowledge] Notification created");
-
-            // Get requester info for Pusher event
-            const [requesterInfo] = await db
-              .select({ name: users.name, email: users.email })
-              .from(users)
-              .where(eq(users.id, userId))
-              .limit(1);
-
-            // Trigger realtime notification via Pusher
-            console.log(
-              "[requestKnowledge] Triggering Pusher event for owner:",
-              ownerId
-            );
-            await triggerKnowledgeRequest(ownerId, {
-              requestId: newRequest.id,
-              question,
-              requesterName: requesterInfo?.name || "",
-              requesterEmail: requesterInfo?.email || "",
-              createdAt: new Date().toISOString(),
-            });
-            console.log("[requestKnowledge] Pusher event triggered");
-
-            console.log(
-              "[requestKnowledge] Success! Request ID:",
-              newRequest.id
-            );
-            return {
-              success: true,
-              message: `Knowledge request sent to ${ownerName}. They will be notified and can choose to share their knowledge with you.`,
-              requestId: newRequest.id,
-            };
-          } catch (error) {
-            console.error("[requestKnowledge] Error:", error);
-            return {
-              success: false,
-              error: "Failed to send knowledge request",
-            };
-          }
-        },
-      }),
+      // Client-side tool that shows confirmation UI - no execute function
+      // askForConfirmation: tool({
+      //   description: `Ask the user for confirmation to request knowledge from another organization member. This will display a UI with the person's name and buttons for the user to confirm or decline.`,
+      //   inputSchema: z.object({
+      //     ownerName: z
+      //       .string()
+      //       .describe("The name of the person who may have the knowledge"),
+      //     embeddingId: z
+      //       .number()
+      //       .describe("The embedding ID of the knowledge to request"),
+      //     question: z
+      //       .string()
+      //       .describe("The original question that led to this suggestion"),
+      //   }),
+      //   // No execute function - this is handled client-side
+      // }),
     },
     onFinish: async ({ text }) => {
       // Save the assistant message
@@ -380,14 +247,14 @@ export async function POST(req: Request) {
     },
   });
 
-  // Return the stream response with the conversation ID in message metadata
+  // Return the stream response with the conversation publicId in message metadata
   return result.toUIMessageStreamResponse({
     sendSources: true,
     sendReasoning: true,
     messageMetadata: ({ part }) => {
-      // Include conversation ID in the message start metadata
+      // Include conversation publicId in the message start metadata
       if (part.type === "start") {
-        return { conversationId: activeConversationId };
+        return { conversationId: conversation.publicId };
       }
       return undefined;
     },

@@ -16,6 +16,8 @@ import { triggerKnowledgeRequest } from "@/lib/pusher";
 const requestSchema = z.object({
   embeddingId: z.number(),
   question: z.string().min(1),
+  conversationId: z.number().optional(), // Legacy support
+  publicId: z.string().optional(),
 });
 
 export async function POST(req: Request) {
@@ -24,7 +26,20 @@ export async function POST(req: Request) {
     const requesterId = session.session.userId;
 
     const body = await req.json();
-    const { embeddingId, question } = requestSchema.parse(body);
+    const { embeddingId, question, conversationId, publicId } = requestSchema.parse(body);
+
+    // Convert publicId to internal conversationId if provided
+    let internalConversationId: number | null = conversationId ?? null;
+    if (publicId && !internalConversationId) {
+      const [conversation] = await db
+        .select({ id: conversations.id })
+        .from(conversations)
+        .where(eq(conversations.publicId, publicId))
+        .limit(1);
+      if (conversation) {
+        internalConversationId = conversation.id;
+      }
+    }
 
     // Get the embedding and find the owner
     const embeddingData = await db
@@ -89,11 +104,13 @@ export async function POST(req: Request) {
       )
       .limit(1);
 
+    // If request already exists, return success (idempotent behavior)
     if (existingRequest.length > 0) {
-      return NextResponse.json(
-        { error: "You already have a pending request for this knowledge" },
-        { status: 400 }
-      );
+      return NextResponse.json({
+        success: true,
+        requestId: existingRequest[0].id,
+        alreadyExists: true,
+      });
     }
 
     // Create the knowledge request
@@ -103,6 +120,7 @@ export async function POST(req: Request) {
         requesterId,
         ownerId,
         embeddingId,
+        conversationId: internalConversationId,
         question,
         status: "pending",
       })

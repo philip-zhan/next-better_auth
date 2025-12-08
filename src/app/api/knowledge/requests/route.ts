@@ -4,7 +4,7 @@ import { knowledgeRequests } from "@/database/schema/knowledge-sharing";
 import { messageEmbeddings, messages } from "@/database/schema/messages";
 import { users } from "@/database/schema/auth-schema";
 import { getSession } from "@/lib/auth";
-import { eq, and, desc, or } from "drizzle-orm";
+import { eq, and, desc, or, type SQL } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 
 export async function GET(req: Request) {
@@ -16,11 +16,17 @@ export async function GET(req: Request) {
     const type = searchParams.get("type") || "received"; // received | sent | all
     const status = searchParams.get("status"); // pending | approved | denied
 
+    console.log("[knowledge/requests] Fetching requests:", {
+      userId,
+      type,
+      status,
+    });
+
     // Create aliases for the users table to join both requester and owner
     const requesterUser = alias(users, "requester_user");
     const ownerUser = alias(users, "owner_user");
 
-    let whereCondition;
+    let whereCondition: SQL | undefined;
     if (type === "received") {
       whereCondition = eq(knowledgeRequests.ownerId, userId);
     } else if (type === "sent") {
@@ -74,10 +80,24 @@ export async function GET(req: Request) {
         eq(knowledgeRequests.embeddingId, messageEmbeddings.id)
       )
       .innerJoin(messages, eq(messageEmbeddings.messageId, messages.id))
-      .innerJoin(requesterUser, eq(knowledgeRequests.requesterId, requesterUser.id))
+      .innerJoin(
+        requesterUser,
+        eq(knowledgeRequests.requesterId, requesterUser.id)
+      )
       .innerJoin(ownerUser, eq(knowledgeRequests.ownerId, ownerUser.id))
       .where(whereCondition)
       .orderBy(desc(knowledgeRequests.createdAt));
+
+    console.log(
+      "[knowledge/requests] Raw query results:",
+      requests.length,
+      "requests found"
+    );
+    // if (requests.length === 0) {
+    //   // Debug: check if there are ANY requests in the database
+    //   const allRequests = await db.select({ id: knowledgeRequests.id, ownerId: knowledgeRequests.ownerId, requesterId: knowledgeRequests.requesterId, status: knowledgeRequests.status }).from(knowledgeRequests);
+    //   console.log("[knowledge/requests] All requests in DB:", allRequests);
+    // }
 
     // Format the response
     const formattedRequests = requests.map((r) => ({
@@ -122,4 +142,3 @@ export async function GET(req: Request) {
     );
   }
 }
-

@@ -17,12 +17,24 @@ import {
   ReasoningTrigger,
 } from "@/components/ai-elements/reasoning";
 import { RefreshCcwIcon, CopyIcon } from "lucide-react";
+import {
+  KnowledgeConfirmation,
+  type ConfirmationInput,
+} from "./knowledge-confirmation";
 
 type ChatMessageProps = {
   message: UIMessage;
   isStreaming: boolean;
   isLastMessage: boolean;
   onRegenerate: () => void;
+  onToolConfirm?: (
+    toolCallId: string,
+    embeddingId: number,
+    question: string,
+    ownerName: string
+  ) => void;
+  onToolDecline?: (toolCallId: string) => void;
+  isToolCallPending?: (toolCallId: string) => boolean;
 };
 
 export function ChatMessage({
@@ -30,6 +42,9 @@ export function ChatMessage({
   isStreaming,
   isLastMessage,
   onRegenerate,
+  onToolConfirm,
+  onToolDecline,
+  isToolCallPending,
 }: ChatMessageProps) {
   const sourceParts = message.parts.filter(
     (part) => part.type === "source-url"
@@ -55,6 +70,8 @@ export function ChatMessage({
 
       {/* Message parts */}
       {message.parts.map((part, partIndex) => {
+        // Debug: log part types to help diagnose issues
+        console.log("[ChatMessage] Part type:", part.type, part);
         switch (part.type) {
           case "text":
             return (
@@ -107,6 +124,133 @@ export function ChatMessage({
                 </ReasoningContent>
               </Reasoning>
             );
+
+          // Handle getInformation tool with requiresConfirmation
+          case "tool-getInformation": {
+            const toolPart = part as unknown as {
+              type: "tool-getInformation";
+              toolCallId: string;
+              state: "partial-call" | "call" | "result" | "output-available";
+              output?: {
+                requiresConfirmation?: boolean;
+                confirmationData?: ConfirmationInput;
+                userConfirmed?: boolean;
+                requestSent?: boolean;
+                error?: string;
+              };
+            };
+
+            // Only render if we have output with requiresConfirmation
+            if (!toolPart.output?.requiresConfirmation) {
+              return null;
+            }
+
+            const confirmationData = toolPart.output.confirmationData;
+            if (!confirmationData) return null;
+
+            // Determine the state for the confirmation component
+            const isPending = isToolCallPending?.(toolPart.toolCallId) ?? false;
+            let confirmationState:
+              | "input-available"
+              | "output-available"
+              | "loading";
+            if (isPending) {
+              confirmationState = "loading";
+            } else if (toolPart.output.userConfirmed !== undefined) {
+              confirmationState = "output-available";
+            } else {
+              confirmationState = "input-available";
+            }
+
+            return (
+              <div
+                key={`${message.id}-tool-${partIndex}`}
+                className="my-3 ml-10"
+              >
+                <KnowledgeConfirmation
+                  input={confirmationData}
+                  state={confirmationState}
+                  output={
+                    toolPart.output.userConfirmed !== undefined
+                      ? {
+                          confirmed: toolPart.output.userConfirmed,
+                          requestSent: toolPart.output.requestSent,
+                          error: toolPart.output.error,
+                        }
+                      : undefined
+                  }
+                  onConfirm={() =>
+                    onToolConfirm?.(
+                      toolPart.toolCallId,
+                      confirmationData.embeddingId,
+                      confirmationData.question,
+                      confirmationData.ownerName
+                    )
+                  }
+                  onDecline={() => onToolDecline?.(toolPart.toolCallId)}
+                />
+              </div>
+            );
+          }
+
+          // Handle askForConfirmation tool (legacy)
+          case "tool-askForConfirmation": {
+            const toolPart = part as unknown as {
+              type: "tool-askForConfirmation";
+              toolCallId: string;
+              state: "partial-call" | "call" | "result";
+              input?: ConfirmationInput;
+              output?: {
+                confirmed: boolean;
+                requestSent?: boolean;
+                error?: string;
+              };
+            };
+
+            // Don't render while still streaming the tool call
+            if (toolPart.state === "partial-call") {
+              return null;
+            }
+
+            const input = toolPart.input;
+            if (!input) return null;
+
+            // Determine the state for the confirmation component
+            const isPending = isToolCallPending?.(toolPart.toolCallId) ?? false;
+            let confirmationState:
+              | "input-available"
+              | "output-available"
+              | "loading";
+            if (isPending) {
+              confirmationState = "loading";
+            } else if (toolPart.state === "result") {
+              confirmationState = "output-available";
+            } else {
+              confirmationState = "input-available";
+            }
+
+            return (
+              <div
+                key={`${message.id}-tool-${partIndex}`}
+                className="my-3 ml-10"
+              >
+                <KnowledgeConfirmation
+                  input={input}
+                  state={confirmationState}
+                  output={toolPart.output}
+                  onConfirm={() =>
+                    onToolConfirm?.(
+                      toolPart.toolCallId,
+                      input.embeddingId,
+                      input.question,
+                      input.ownerName
+                    )
+                  }
+                  onDecline={() => onToolDecline?.(toolPart.toolCallId)}
+                />
+              </div>
+            );
+          }
 
           default:
             return null;

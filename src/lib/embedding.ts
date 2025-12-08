@@ -300,7 +300,7 @@ export const findEnhancedRelevantContent = async (
     userId,
     organizationId,
     excludeIds,
-    4,
+    2,
     similarityThreshold
   );
 

@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { MessageSquareIcon, PlusIcon, InboxIcon, Loader2Icon } from "lucide-react";
+import { MessageSquareIcon, PlusIcon, InboxIcon, Loader2Icon, SparklesIcon } from "lucide-react";
 import type { ConversationItem } from "../../app/chat/types";
 import { UserButton } from "@daveyplate/better-auth-ui";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -28,12 +28,13 @@ import {
 import { ChevronDownIcon } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { useRealtime } from "@/components/realtime-provider";
 
 type ChatSidebarProps = {
   conversations: ConversationItem[];
-  currentConversationId: number | null;
+  currentConversationId: string | null;
   onNewChat: () => void;
-  onSelectConversation: (id: number) => void;
+  onSelectConversation: (publicId: string) => void;
 };
 
 // Helper function to group conversations by time
@@ -102,6 +103,7 @@ export function ChatSidebar({
   const groupedConversations = groupConversationsByTime(conversations);
   const [requestsOpen, setRequestsOpen] = useState(true);
   const queryClient = useQueryClient();
+  const { hasPendingContinuation } = useRealtime();
 
   // Fetch pending knowledge requests - will be invalidated by Pusher on new requests
   const { data: pendingRequests = [], isLoading: requestsLoading } = useQuery({
@@ -144,18 +146,33 @@ export function ChatSidebar({
                 </SidebarGroupLabel>
                 <SidebarGroupContent>
                   <SidebarMenu>
-                    {group.conversations.map((conv) => (
-                      <SidebarMenuItem key={conv.id}>
-                        <SidebarMenuButton
-                          onClick={() => onSelectConversation(conv.id)}
-                          isActive={currentConversationId === conv.id}
-                          className="w-full justify-start"
-                        >
-                          <MessageSquareIcon className="size-4 shrink-0" />
-                          <span className="truncate">{conv.title}</span>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    ))}
+                    {group.conversations.map((conv) => {
+                      const hasPending = hasPendingContinuation(conv.publicId);
+                      return (
+                        <SidebarMenuItem key={conv.publicId}>
+                          <SidebarMenuButton
+                            onClick={() => onSelectConversation(conv.publicId)}
+                            isActive={currentConversationId === conv.publicId}
+                            className="w-full justify-start"
+                          >
+                            {hasPending ? (
+                              <SparklesIcon className="size-4 shrink-0 text-amber-500" />
+                            ) : (
+                              <MessageSquareIcon className="size-4 shrink-0" />
+                            )}
+                            <span className="truncate">{conv.title}</span>
+                            {hasPending && (
+                              <Badge
+                                variant="secondary"
+                                className="ml-auto text-[10px] px-1.5 py-0 bg-amber-500/20 text-amber-700 dark:text-amber-300"
+                              >
+                                Ready
+                              </Badge>
+                            )}
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      );
+                    })}
                   </SidebarMenu>
                 </SidebarGroupContent>
               </SidebarGroup>

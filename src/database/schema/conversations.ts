@@ -6,6 +6,7 @@ import { messages } from "./messages";
 
 export const conversations = pgTable("conversations", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  publicId: text("public_id").notNull().unique(),
   userId: text("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
