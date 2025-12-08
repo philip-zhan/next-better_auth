@@ -64,8 +64,8 @@ export function KnowledgeConfirmation({
           <CardContent className="flex items-center gap-3 py-3">
             <CheckIcon className="size-5 text-green-600" />
             <p className="text-sm text-green-700 dark:text-green-400">
-              Request sent to {input.ownerName}. They&apos;ll be notified and
-              can choose to share their knowledge with you.
+              Request sent to {input.ownerName}. I&apos;ll follow up with you as
+              soon as they share that knowledge.
             </p>
           </CardContent>
         </Card>

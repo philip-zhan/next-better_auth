@@ -32,53 +32,52 @@ export function ChatClient({
 
   // Custom sendAutomaticallyWhen that handles confirmation flows
   const shouldAutoSend = useMemo(
-    () =>
-      (options: { messages: UIMessage[] }) => {
-        const { messages: chatMessages } = options;
-        const lastMessage = chatMessages[chatMessages.length - 1];
-        if (lastMessage?.role === "assistant") {
-          for (const part of lastMessage.parts) {
-            // Block when getInformation returns requiresConfirmation and user hasn't responded yet
-            if (part.type === "tool-getInformation") {
-              const toolPart = part as unknown as {
-                state: string;
-                output?: { requiresConfirmation?: boolean; userConfirmed?: boolean };
+    () => (options: { messages: UIMessage[] }) => {
+      const { messages: chatMessages } = options;
+      const lastMessage = chatMessages[chatMessages.length - 1];
+      if (lastMessage?.role === "assistant") {
+        for (const part of lastMessage.parts) {
+          // Block when getInformation returns requiresConfirmation and user hasn't responded yet
+          if (part.type === "tool-getInformation") {
+            const toolPart = part as unknown as {
+              state: string;
+              output?: {
+                requiresConfirmation?: boolean;
+                userConfirmed?: boolean;
               };
-              if (
-                toolPart.output?.requiresConfirmation === true &&
-                toolPart.output?.userConfirmed === undefined
-              ) {
-                return false; // Block - waiting for user confirmation
-              }
-              // If user confirmed, block and show static message
-              if (toolPart.output?.userConfirmed === true) {
-                return false;
-              }
+            };
+            if (
+              toolPart.output?.requiresConfirmation === true &&
+              toolPart.output?.userConfirmed === undefined
+            ) {
+              return false; // Block - waiting for user confirmation
             }
-            // Legacy: handle askForConfirmation tool
-            if (part.type === "tool-askForConfirmation") {
-              const toolPart = part as unknown as {
-                state: string;
-                output?: { confirmed: boolean };
-              };
-              if (toolPart.state === "result" && toolPart.output?.confirmed === true) {
-                return false;
-              }
+            // If user confirmed, block and show static message
+            if (toolPart.output?.userConfirmed === true) {
+              return false;
+            }
+          }
+          // Legacy: handle askForConfirmation tool
+          if (part.type === "tool-askForConfirmation") {
+            const toolPart = part as unknown as {
+              state: string;
+              output?: { confirmed: boolean };
+            };
+            if (
+              toolPart.state === "result" &&
+              toolPart.output?.confirmed === true
+            ) {
+              return false;
             }
           }
         }
-        return lastAssistantMessageIsCompleteWithToolCalls(options);
-      },
+      }
+      return lastAssistantMessageIsCompleteWithToolCalls(options);
+    },
     []
   );
 
-  const {
-    messages,
-    sendMessage,
-    status,
-    regenerate,
-    setMessages,
-  } = useChat({
+  const { messages, sendMessage, status, regenerate, setMessages } = useChat({
     id: conversationId ? String(conversationId) : undefined,
     messages: initialMessages,
     // Automatically send when all tool results are available, except for askForConfirmation
@@ -133,10 +132,14 @@ export function ChatClient({
         prev.map((msg) => {
           const updatedParts = msg.parts.map((part) => {
             if (
-              (part.type === "tool-getInformation" || part.type === "tool-askForConfirmation") &&
-              (part as unknown as { toolCallId: string }).toolCallId === toolCallId
+              (part.type === "tool-getInformation" ||
+                part.type === "tool-askForConfirmation") &&
+              (part as unknown as { toolCallId: string }).toolCallId ===
+                toolCallId
             ) {
-              const typedPart = part as unknown as { output?: Record<string, unknown> };
+              const typedPart = part as unknown as {
+                output?: Record<string, unknown>;
+              };
               return {
                 ...part,
                 output: { ...typedPart.output, ...updates },
@@ -173,32 +176,32 @@ export function ChatClient({
         error: result.error,
       });
 
-      // Append a static assistant message
-      if (result.requestSent) {
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: crypto.randomUUID(),
-            role: "assistant" as const,
-            content: `Request sent to ${ownerName}. I'll provide an answer as soon as they share that knowledge.`,
-            parts: [
-              {
-                type: "text" as const,
-                text: `Request sent to ${ownerName}. I'll provide an answer as soon as they share that knowledge.`,
-              },
-            ],
-          },
-        ]);
-      }
+      // // Append a static assistant message
+      // if (result.requestSent) {
+      //   setMessages((prev) => [
+      //     ...prev,
+      //     {
+      //       id: crypto.randomUUID(),
+      //       role: "assistant" as const,
+      //       content: `Request sent to ${ownerName}. I'll follow up with you as soon as they share that knowledge.`,
+      //       parts: [
+      //         {
+      //           type: "text" as const,
+      //           text: `Request sent to ${ownerName}. I'll follow up with you as soon as they share that knowledge.`,
+      //         },
+      //       ],
+      //     },
+      //   ]);
+      // }
     },
-    [handleKnowledgeConfirm, setMessages, updateToolResult]
+    [handleKnowledgeConfirm, updateToolResult]
   );
 
   const handleToolDecline = useCallback(
     (toolCallId: string) => {
       // Update the tool result with user decline
       updateToolResult(toolCallId, { userConfirmed: false });
-      
+
       // Send a continuation message to tell the AI the user declined
       // This triggers a new API call with the updated messages
       sendMessage(

@@ -89,11 +89,13 @@ export async function POST(req: Request) {
       )
       .limit(1);
 
+    // If request already exists, return success (idempotent behavior)
     if (existingRequest.length > 0) {
-      return NextResponse.json(
-        { error: "You already have a pending request for this knowledge" },
-        { status: 400 }
-      );
+      return NextResponse.json({
+        success: true,
+        requestId: existingRequest[0].id,
+        alreadyExists: true,
+      });
     }
 
     // Create the knowledge request
