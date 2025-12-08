@@ -20,7 +20,7 @@ const generateChunks = (input: string): string[] => {
 export const generateEmbeddings = async (
   value: string
 ): Promise<Array<{ embedding: number[]; content: string }>> => {
-  const chunks = generateChunks(value);
+  const chunks = generateChunks(value.trim());
   if (chunks.length === 0) {
     return [];
   }
@@ -32,7 +32,7 @@ export const generateEmbeddings = async (
 };
 
 export const generateEmbedding = async (value: string): Promise<number[]> => {
-  const input = value.replaceAll("\\n", " ");
+  const input = value.trim().replaceAll("\\n", " ");
   const { embedding } = await embed({
     model: embeddingModel,
     value: input,
