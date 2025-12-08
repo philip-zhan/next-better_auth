@@ -105,12 +105,22 @@ export function ChatClient({
 
   // Check for pending continuations when conversation changes
   useEffect(() => {
+    console.log("[chat-client] Checking for pending continuation:", {
+      currentConversationId,
+      hasTriggered: hasTriggeredContinuation.current,
+      status,
+    });
+
     if (!currentConversationId || hasTriggeredContinuation.current) {
+      console.log("[chat-client] Skipping - no conversationId or already triggered");
       return;
     }
 
     const pendingContinuation = getPendingContinuation(currentConversationId);
+    console.log("[chat-client] Pending continuation:", pendingContinuation);
+
     if (pendingContinuation && status === "ready") {
+      console.log("[chat-client] Triggering auto-continuation for:", pendingContinuation);
       hasTriggeredContinuation.current = true;
 
       // Send a continuation message to trigger the AI to answer with the new knowledge
@@ -138,8 +148,9 @@ export function ChatClient({
 
   // Reset the continuation flag when conversation changes
   useEffect(() => {
+    console.log("[chat-client] Resetting hasTriggeredContinuation for conversationId:", conversationId);
     hasTriggeredContinuation.current = false;
-  }, []);
+  }, [conversationId]);
 
   // Handler for knowledge confirmation
   const handleKnowledgeConfirm = useCallback(
