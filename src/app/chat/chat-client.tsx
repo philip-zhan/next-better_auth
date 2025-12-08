@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { useChat, type UIMessage } from "@ai-sdk/react";
 import { lastAssistantMessageIsCompleteWithToolCalls } from "ai";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
@@ -10,6 +10,7 @@ import { ChatSidebar } from "../../components/chat/chat-sidebar";
 import { ChatMessages } from "../../components/chat/chat-messages";
 import { ChatInput } from "../../components/chat/chat-input";
 import type { ConversationItem } from "./types";
+import { useRealtime } from "@/components/realtime-provider";
 
 type ChatClientProps = {
   conversations: ConversationItem[];
@@ -29,6 +30,8 @@ export function ChatClient({
   const [pendingToolCalls, setPendingToolCalls] = useState<Set<string>>(
     new Set()
   );
+  const { getPendingContinuation, removePendingContinuation } = useRealtime();
+  const hasTriggeredContinuation = useRef(false);
 
   // Custom sendAutomaticallyWhen that handles confirmation flows
   const shouldAutoSend = useMemo(
@@ -100,6 +103,44 @@ export function ChatClient({
     ),
   });
 
+  // Check for pending continuations when conversation changes
+  useEffect(() => {
+    if (!currentConversationId || hasTriggeredContinuation.current) {
+      return;
+    }
+
+    const pendingContinuation = getPendingContinuation(currentConversationId);
+    if (pendingContinuation && status === "ready") {
+      hasTriggeredContinuation.current = true;
+
+      // Send a continuation message to trigger the AI to answer with the new knowledge
+      sendMessage(
+        {
+          text: `[Knowledge request approved - please search again and answer my original question: "${pendingContinuation.question}"]`,
+        },
+        {
+          body: {
+            conversationId: currentConversationId,
+          },
+        }
+      );
+
+      // Remove the pending continuation
+      removePendingContinuation(currentConversationId);
+    }
+  }, [
+    currentConversationId,
+    getPendingContinuation,
+    removePendingContinuation,
+    sendMessage,
+    status,
+  ]);
+
+  // Reset the continuation flag when conversation changes
+  useEffect(() => {
+    hasTriggeredContinuation.current = false;
+  }, [conversationId]);
+
   // Handler for knowledge confirmation
   const handleKnowledgeConfirm = useCallback(
     async (
@@ -110,7 +151,11 @@ export function ChatClient({
         const response = await fetch("/api/knowledge/request", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ embeddingId, question }),
+          body: JSON.stringify({
+            embeddingId,
+            question,
+            conversationId: currentConversationId,
+          }),
         });
 
         if (response.ok) {
@@ -122,7 +167,7 @@ export function ChatClient({
         return { requestSent: false, error: "Failed to send request" };
       }
     },
-    []
+    [currentConversationId]
   );
 
   // Helper to update a tool result in messages

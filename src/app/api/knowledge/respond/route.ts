@@ -81,6 +81,8 @@ export async function POST(req: Request) {
         status: "approved",
         responseContent: responseContent || undefined,
         respondedAt: new Date().toISOString(),
+        conversationId: request.conversationId ?? undefined,
+        question: request.question,
       });
     }
 

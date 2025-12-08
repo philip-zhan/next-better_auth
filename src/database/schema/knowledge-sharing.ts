@@ -8,6 +8,7 @@ import {
 import { timestamps } from "./_timestamps";
 import { users } from "./auth-schema";
 import { messageEmbeddings } from "./messages";
+import { conversations } from "./conversations";
 import { relations } from "drizzle-orm";
 
 export const knowledgeRequestStatusEnum = pgEnum("knowledge_request_status", [
@@ -27,6 +28,9 @@ export const knowledgeRequests = pgTable("knowledge_requests", {
   embeddingId: integer("embedding_id")
     .notNull()
     .references(() => messageEmbeddings.id, { onDelete: "cascade" }),
+  conversationId: integer("conversation_id").references(() => conversations.id, {
+    onDelete: "set null",
+  }),
   question: text("question").notNull(),
   status: knowledgeRequestStatusEnum("status").notNull().default("pending"),
   responseContent: text("response_content"),
@@ -50,6 +54,10 @@ export const knowledgeRequestsRelations = relations(
     embedding: one(messageEmbeddings, {
       fields: [knowledgeRequests.embeddingId],
       references: [messageEmbeddings.id],
+    }),
+    conversation: one(conversations, {
+      fields: [knowledgeRequests.conversationId],
+      references: [conversations.id],
     }),
   })
 );

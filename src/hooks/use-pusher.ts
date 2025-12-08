@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import Pusher from "pusher-js";
 import type { Channel } from "pusher-js";
 import { useQueryClient } from "@tanstack/react-query";
@@ -14,6 +14,13 @@ import {
 interface UsePusherOptions {
   userId: string | undefined;
   enabled?: boolean;
+}
+
+// Pending continuation info for auto-continuing after knowledge approval
+export interface PendingContinuation {
+  conversationId: number;
+  question: string;
+  approvedAt: string;
 }
 
 // Singleton Pusher instance
@@ -32,6 +39,46 @@ function getPusherInstance(): Pusher {
 export function usePusher({ userId, enabled = true }: UsePusherOptions) {
   const queryClient = useQueryClient();
   const channelRef = useRef<Channel | null>(null);
+  const [pendingContinuations, setPendingContinuations] = useState<
+    Map<number, PendingContinuation>
+  >(new Map());
+
+  // Add a pending continuation for a conversation
+  const addPendingContinuation = useCallback(
+    (continuation: PendingContinuation) => {
+      setPendingContinuations((prev) => {
+        const next = new Map(prev);
+        next.set(continuation.conversationId, continuation);
+        return next;
+      });
+    },
+    []
+  );
+
+  // Remove a pending continuation (after it's been processed)
+  const removePendingContinuation = useCallback((conversationId: number) => {
+    setPendingContinuations((prev) => {
+      const next = new Map(prev);
+      next.delete(conversationId);
+      return next;
+    });
+  }, []);
+
+  // Check if a conversation has a pending continuation
+  const hasPendingContinuation = useCallback(
+    (conversationId: number) => {
+      return pendingContinuations.has(conversationId);
+    },
+    [pendingContinuations]
+  );
+
+  // Get a pending continuation for a conversation
+  const getPendingContinuation = useCallback(
+    (conversationId: number) => {
+      return pendingContinuations.get(conversationId);
+    },
+    [pendingContinuations]
+  );
 
   const handleKnowledgeRequest = useCallback(
     (data: KnowledgeRequestEvent) => {
@@ -67,11 +114,24 @@ export function usePusher({ userId, enabled = true }: UsePusherOptions) {
         }
       );
 
+      // If approved and we have a conversationId, add a pending continuation
+      if (
+        data.status === "approved" &&
+        data.conversationId &&
+        data.question
+      ) {
+        addPendingContinuation({
+          conversationId: data.conversationId,
+          question: data.question,
+          approvedAt: data.respondedAt,
+        });
+      }
+
       // Invalidate knowledge requests query to refetch
       queryClient.invalidateQueries({ queryKey: ["knowledge-requests"] });
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
-    [queryClient]
+    [queryClient, addPendingContinuation]
   );
 
   useEffect(() => {
@@ -101,5 +161,9 @@ export function usePusher({ userId, enabled = true }: UsePusherOptions) {
 
   return {
     isConnected: channelRef.current?.subscribed ?? false,
+    pendingContinuations,
+    hasPendingContinuation,
+    getPendingContinuation,
+    removePendingContinuation,
   };
 }

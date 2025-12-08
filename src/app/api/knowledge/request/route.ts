@@ -16,6 +16,7 @@ import { triggerKnowledgeRequest } from "@/lib/pusher";
 const requestSchema = z.object({
   embeddingId: z.number(),
   question: z.string().min(1),
+  conversationId: z.number().optional(),
 });
 
 export async function POST(req: Request) {
@@ -24,7 +25,7 @@ export async function POST(req: Request) {
     const requesterId = session.session.userId;
 
     const body = await req.json();
-    const { embeddingId, question } = requestSchema.parse(body);
+    const { embeddingId, question, conversationId } = requestSchema.parse(body);
 
     // Get the embedding and find the owner
     const embeddingData = await db
@@ -105,6 +106,7 @@ export async function POST(req: Request) {
         requesterId,
         ownerId,
         embeddingId,
+        conversationId: conversationId ?? null,
         question,
         status: "pending",
       })
