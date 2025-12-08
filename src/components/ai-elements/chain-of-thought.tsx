@@ -14,8 +14,8 @@ import {
   DotIcon,
   type LucideIcon,
 } from "lucide-react";
-import type { ComponentProps, ReactNode } from "react";
-import { createContext, memo, useContext, useMemo } from "react";
+import type { ComponentProps } from "react";
+import { createContext, memo, useContext } from "react";
 
 type ChainOfThoughtContextValue = {
   isOpen: boolean;
@@ -57,13 +57,8 @@ export const ChainOfThought = memo(
       onChange: onOpenChange,
     });
 
-    const chainOfThoughtContext = useMemo(
-      () => ({ isOpen, setIsOpen }),
-      [isOpen, setIsOpen]
-    );
-
     return (
-      <ChainOfThoughtContext.Provider value={chainOfThoughtContext}>
+      <ChainOfThoughtContext.Provider value={{ isOpen, setIsOpen }}>
         <div
           className={cn("not-prose max-w-prose space-y-4", className)}
           {...props}
@@ -110,8 +105,8 @@ export const ChainOfThoughtHeader = memo(
 
 export type ChainOfThoughtStepProps = ComponentProps<"div"> & {
   icon?: LucideIcon;
-  label: ReactNode;
-  description?: ReactNode;
+  label: string;
+  description?: string;
   status?: "complete" | "active" | "pending";
 };
 

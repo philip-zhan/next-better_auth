@@ -8,21 +8,20 @@ import {
 } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
 import { BrainIcon, ChevronDownIcon } from "lucide-react";
-import type { ComponentProps, ReactNode } from "react";
+import type { ComponentProps } from "react";
 import { createContext, memo, useContext, useEffect, useState } from "react";
-import { Streamdown } from "streamdown";
-import { Shimmer } from "./shimmer";
+import { Response } from "./response";
 
 type ReasoningContextValue = {
   isStreaming: boolean;
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
-  duration: number | undefined;
+  duration: number;
 };
 
 const ReasoningContext = createContext<ReasoningContextValue | null>(null);
 
-export const useReasoning = () => {
+const useReasoning = () => {
   const context = useContext(ReasoningContext);
   if (!context) {
     throw new Error("Reasoning components must be used within Reasoning");
@@ -59,7 +58,7 @@ export const Reasoning = memo(
     });
     const [duration, setDuration] = useControllableState({
       prop: durationProp,
-      defaultProp: undefined,
+      defaultProp: 0,
     });
 
     const [hasAutoClosed, setHasAutoClosed] = useState(false);
@@ -111,13 +110,11 @@ export const Reasoning = memo(
   }
 );
 
-export type ReasoningTriggerProps = ComponentProps<typeof CollapsibleTrigger> & {
-  getThinkingMessage?: (isStreaming: boolean, duration?: number) => ReactNode;
-};
+export type ReasoningTriggerProps = ComponentProps<typeof CollapsibleTrigger>;
 
-const defaultGetThinkingMessage = (isStreaming: boolean, duration?: number) => {
+const getThinkingMessage = (isStreaming: boolean, duration?: number) => {
   if (isStreaming || duration === 0) {
-    return <Shimmer duration={1}>Thinking...</Shimmer>;
+    return <p>Thinking...</p>;
   }
   if (duration === undefined) {
     return <p>Thought for a few seconds</p>;
@@ -126,7 +123,7 @@ const defaultGetThinkingMessage = (isStreaming: boolean, duration?: number) => {
 };
 
 export const ReasoningTrigger = memo(
-  ({ className, children, getThinkingMessage = defaultGetThinkingMessage, ...props }: ReasoningTriggerProps) => {
+  ({ className, children, ...props }: ReasoningTriggerProps) => {
     const { isStreaming, isOpen, duration } = useReasoning();
 
     return (
@@ -170,7 +167,7 @@ export const ReasoningContent = memo(
       )}
       {...props}
     >
-      <Streamdown {...props}>{children}</Streamdown>
+      <Response className="grid gap-2">{children}</Response>
     </CollapsibleContent>
   )
 );
